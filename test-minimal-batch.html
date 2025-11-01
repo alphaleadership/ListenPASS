@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Minimal Batch Processor</title>
+</head>
+<body>
+    <h1>Test Minimal Batch Processor</h1>
+    <div id="results"></div>
+
+    <!-- Load minimal batch processor -->
+    <script src="./js/client/batch-processor-minimal.js"></script>
+
+    <script>
+        function addResult(message, isError = false) {
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.margin = '5px 0';
+            div.style.borderRadius = '4px';
+            div.style.background = isError ? '#f8d7da' : '#d4edda';
+            div.style.color = isError ? '#721c24' : '#155724';
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        // Test immediately
+        console.log('Starting minimal batch processor test...');
+        
+        // Check if class exists
+        if (typeof ClientBatchProcessor !== 'undefined') {
+            addResult('✅ ClientBatchProcessor class is defined');
+            
+            try {
+                // Try to create an instance
+                const processor = new ClientBatchProcessor();
+                addResult('✅ ClientBatchProcessor instance created successfully');
+                
+                // Test a method
+                const testFile = new File(['test'], 'test.csv', { type: 'text/csv' });
+                const isValid = processor.validateFileBasic(testFile);
+                addResult(`✅ validateFileBasic test: ${isValid ? 'PASS' : 'FAIL'}`);
+                
+            } catch (error) {
+                addResult(`❌ Error: ${error.message}`, true);
+                console.error('Error:', error);
+            }
+            
+        } else {
+            addResult('❌ ClientBatchProcessor class is not defined', true);
+        }
+        
+        // Check window object
+        if (window.ClientBatchProcessor) {
+            addResult('✅ window.ClientBatchProcessor is available');
+        } else {
+            addResult('❌ window.ClientBatchProcessor is not available', true);
+        }
+
+        // Listen for script errors
+        window.addEventListener('error', (event) => {
+            addResult(`❌ Script error: ${event.message}`, true);
+        });
+    </script>
+</body>
+</html>

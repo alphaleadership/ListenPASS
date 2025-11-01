@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Batch Processor</title>
+</head>
+<body>
+    <h1>Test Batch Processor</h1>
+    <div id="results"></div>
+
+    <!-- Load dependencies first -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/error-handler.js"></script>
+    <script src="./js/client/api-client.js"></script>
+    
+    <!-- Load batch processor -->
+    <script src="./js/client/batch-processor.js"></script>
+
+    <script>
+        function addResult(message, isError = false) {
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.margin = '5px 0';
+            div.style.borderRadius = '4px';
+            div.style.background = isError ? '#f8d7da' : '#d4edda';
+            div.style.color = isError ? '#721c24' : '#155724';
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        // Test immediately after script loads
+        setTimeout(() => {
+            console.log('Testing ClientBatchProcessor...');
+            
+            // Check if class exists
+            if (typeof ClientBatchProcessor !== 'undefined') {
+                addResult('✅ ClientBatchProcessor class is defined');
+                
+                try {
+                    // Try to create an instance
+                    const processor = new ClientBatchProcessor();
+                    addResult('✅ ClientBatchProcessor instance created successfully');
+                    
+                    // Check methods
+                    if (typeof processor.validateFileBasic === 'function') {
+                        addResult('✅ validateFileBasic method exists');
+                    } else {
+                        addResult('❌ validateFileBasic method missing', true);
+                    }
+                    
+                } catch (error) {
+                    addResult(`❌ Error creating ClientBatchProcessor: ${error.message}`, true);
+                    console.error('Error:', error);
+                }
+                
+            } else {
+                addResult('❌ ClientBatchProcessor class is not defined', true);
+                
+                // Check what's in global scope
+                const globals = Object.keys(window).filter(key => 
+                    key.includes('Batch') || key.includes('Client') || key.includes('Processor')
+                );
+                addResult(`Available globals: ${globals.join(', ') || 'none'}`, true);
+            }
+            
+            // Check window object
+            if (window.ClientBatchProcessor) {
+                addResult('✅ window.ClientBatchProcessor is available');
+            } else {
+                addResult('❌ window.ClientBatchProcessor is not available', true);
+            }
+            
+        }, 100);
+
+        // Listen for script errors
+        window.addEventListener('error', (event) => {
+            addResult(`❌ Script error: ${event.message} at ${event.filename}:${event.lineno}`, true);
+        });
+    </script>
+</body>
+</html>

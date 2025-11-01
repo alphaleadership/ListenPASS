@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test SCP Card Generator - Version Fonctionnelle</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            background: #2c5aa0;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .warning { border-left: 4px solid #ffc107; }
+        .info { border-left: 4px solid #17a2b8; }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        
+        canvas { 
+            border: 2px solid #2c5aa0; 
+            border-radius: 8px;
+            margin: 10px 0; 
+            display: block;
+            background: white;
+        }
+        
+        .demo-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-demo {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .preview-demo {
+            text-align: center;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            margin: 5px 0 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-warning { background: #ffc107; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .card-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .card-type-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .card-type-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        
+        .card-type-btn.active {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .logs {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 Test SCP Card Generator</h1>
+        <p>Version fonctionnelle avec générateur de cartes intégré</p>
+    </div>
+
+    <!-- Status Section -->
+    <div class="test-section info">
+        <h2>📊 Status du Système</h2>
+        <div id="systemStatus">Initialisation en cours...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="systemProgress" style="width: 0%">0%</div>
+        </div>
+    </div>
+
+    <!-- Demo Section -->
+    <div class="test-section success">
+        <h2>🎨 Démonstration Interactive</h2>
+        <div class="demo-section">
+            <div class="form-demo">
+                <h3>Informations du Personnel</h3>
+                
+                <label>Type de Carte:</label>
+                <div class="card-types">
+                    <div class="card-type-btn active" data-type="researcher">
+                        <strong>Chercheur</strong><br>
+                        <small>Personnel de recherche</small>
+                    </div>
+                    <div class="card-type-btn" data-type="security">
+                        <strong>Sécurité</strong><br>
+                        <small>Personnel de sécurité</small>
+                    </div>
+                    <div class="card-type-btn" data-type="dclass">
+                        <strong>Classe-D</strong><br>
+                        <small>Sujets de test</small>
+                    </div>
+                    <div class="card-type-btn" data-type="o5">
+                        <strong>Conseil O5</strong><br>
+                        <small>Haute direction</small>
+                    </div>
+                    <div class="card-type-btn" data-type="mtf">
+                        <strong>MTF</strong><br>
+                        <small>Force mobile</small>
+                    </div>
+                </div>
+                
+                <label>Nom Complet:</label>
+                <input type="text" id="fullName" placeholder="Dr. John Doe" value="Dr. John Doe">
+                
+                <label>ID Employé:</label>
+                <input type="text" id="employeeId" placeholder="SCP-1234-001" value="SCP-1234-001">
+                
+                <label>Site:</label>
+                <select id="siteDesignation">
+                    <option value="Site-19">Site-19</option>
+                    <option value="Site-██">Site-██</option>
+                    <option value="Area-██">Area-██</option>
+                    <option value="MTF-Alpha-1">MTF Alpha-1 "Red Right Hand"</option>
+                    <option value="MTF-Epsilon-11">MTF Epsilon-11 "Nine-Tailed Fox"</option>
+                </select>
+                
+                <label>Département:</label>
+                <input type="text" id="department" placeholder="Research" value="Research">
+                
+                <label>Niveau de Clearance:</label>
+                <select id="clearanceLevel">
+                    <option value="1">Niveau 1</option>
+                    <option value="2">Niveau 2</option>
+                    <option value="3" selected>Niveau 3</option>
+                    <option value="4">Niveau 4</option>
+                    <option value="5">Niveau 5</option>
+                </select>
+                
+                <label>Position:</label>
+                <input type="text" id="position" placeholder="Senior Researcher" value="Senior Researcher">
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="updateCard()" class="btn-success">🔄 Mettre à Jour la Carte</button>
+                    <button onclick="exportCard()">💾 Exporter PNG</button>
+                    <button onclick="exportHighRes()">🖼️ Export Haute Résolution</button>
+                </div>
+                
+                <div id="cardStatus" style="margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 4px;">
+                    Prêt à générer une carte
+                </div>
+            </div>
+            
+            <div class="preview-demo">
+                <h3>Aperçu de la Carte</h3>
+                <canvas id="cardCanvas" width="428" height="270"></canvas>
+                <div id="previewStatus">Carte non générée</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Results -->
+    <div class="test-section">
+        <h2>🧪 Résultats des Tests</h2>
+        <div id="testResults">
+            <button onclick="runAllTests()">▶️ Lancer Tous les Tests</button>
+            <button onclick="runModuleTest()">📦 Test Modules</button>
+            <button onclick="runGeneratorTest()">🎨 Test Générateur</button>
+            <button onclick="runExportTest()">💾 Test Export</button>
+        </div>
+    </div>
+
+    <!-- Console Logs -->
+    <div class="test-section">
+        <h2>📝 Console de Debug</h2>
+        <div class="logs" id="debugConsole">
+            [SYSTEM] Initialisation du générateur de cartes SCP...<br>
+        </div>
+        <button onclick="clearLogs()">🗑️ Effacer les Logs</button>
+    </div>
+
+    <!-- Inline Card Generator Implementation -->
+    <script>
+        // Console de debug
+        function debugLog(message, type = 'INFO') {
+            const console = document.getElementById('debugConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = {
+                'INFO': '#00ff00',
+                'SUCCESS': '#00ff88',
+                'ERROR': '#ff4444',
+                'WARNING': '#ffaa00'
+            }[type] || '#00ff00';
+            
+            console.innerHTML += `<span style="color: ${color}">[${timestamp}] [${type}] ${message}</span><br>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Classes du générateur de cartes
+        class CardTemplate {
+            constructor(type) {
+                this.type = type;
+                this.colors = this.getColorScheme(type);
+                debugLog(`Template créé pour le type: ${type}`);
+            }
+            
+            getColorScheme(type) {
+                const schemes = {
+                    researcher: { primary: '#2c5aa0', secondary: '#ffffff', accent: '#ff6b35', text: '#000000' },
+                    security: { primary: '#8b0000', secondary: '#ffffff', accent: '#ffd700', text: '#000000' },
+                    dclass: { primary: '#ff4500', secondary: '#ffffff', accent: '#ffff00', text: '#000000' },
+                    o5: { primary: '#000000', secondary: '#ffffff', accent: '#ff0000', text: '#ffffff' },
+                    mtf: { primary: '#4a4a4a', secondary: '#ffffff', accent: '#00ff00', text: '#000000' }
+                };
+                return schemes[type] || schemes.researcher;
+            }
+        }
+        
+        class UnifiedCardInterface {
+            constructor() {
+                this.currentCardType = 'researcher';
+                this.cardTypes = {
+                    researcher: {
+                        title: "Research Personnel",
+                        clearanceLevels: [1, 2, 3, 4],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    },
+                    security: {
+                        title: "Security Personnel",
+                        clearanceLevels: [1, 2, 3, 4, 5],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    },
+                    dclass: {
+                        title: "D-Class Personnel",
+                        clearanceLevels: [0],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation'],
+                        optionalFields: ['photo', 'dateOfBirth']
+                    },
+                    o5: {
+                        title: "O5 Council",
+                        clearanceLevels: [5],
+                        requiredFields: ['fullName', 'employeeId', 'position'],
+                        optionalFields: ['photo']
+                    },
+                    mtf: {
+                        title: "MTF Personnel",
+                        clearanceLevels: [2, 3, 4, 5],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    }
+                };
+                debugLog('Interface de cartes unifiée initialisée');
+            }
+            
+            switchCardType(newType) {
+                if (this.cardTypes[newType]) {
+                    this.currentCardType = newType;
+                    debugLog(`Type de carte changé vers: ${newType}`);
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        class SCPCardGenerator {
+            constructor(cardType, mode = 'client') {
+                this.cardType = cardType;
+                this.mode = mode;
+                this.template = new CardTemplate(cardType);
+                this.formData = {};
+                this.canvas = null;
+                this.ctx = null;
+                
+                debugLog(`Générateur SCP créé - Type: ${cardType}, Mode: ${mode}`);
+                this.initializeCanvas();
+            }
+            
+            initializeCanvas() {
+                this.canvas = document.getElementById('cardCanvas');
+                if (this.canvas) {
+                    this.ctx = this.canvas.getContext('2d');
+                    debugLog('Canvas initialisé avec succès');
+                } else {
+                    debugLog('Canvas non trouvé', 'ERROR');
+                }
+            }
+            
+            updateFormData(data) {
+                this.formData = { ...this.formData, ...data };
+                debugLog(`Données du formulaire mises à jour: ${Object.keys(data).join(', ')}`);
+            }
+            
+            renderCard() {
+                if (!this.ctx) {
+                    debugLog('Impossible de rendre la carte - pas de contexte canvas', 'ERROR');
+                    return;
+                }
+                
+                debugLog('Début du rendu de la carte...');
+                
+                // Effacer le canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Dessiner le fond
+                this.drawBackground();
+                
+                // Dessiner la bordure
+                this.drawBorder();
+                
+                // Dessiner l'en-tête
+                this.drawHeader();
+                
+                // Dessiner les informations du personnel
+                this.drawPersonnelInfo();
+                
+                // Dessiner le badge de clearance
+                this.drawClearanceBadge();
+                
+                // Dessiner la bande de classification
+                this.drawClassificationBand();
+                
+                // Dessiner le placeholder photo
+                this.drawPhotoPlaceholder();
+                
+                // Dessiner les éléments de sécurité
+                this.drawSecurityElements();
+                
+                debugLog('Carte rendue avec succès', 'SUCCESS');
+            }
+            
+            drawBackground() {
+                const colors = this.template.colors;
+                
+                // Fond principal
+                this.ctx.fillStyle = colors.secondary;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Motif de sécurité subtil
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.03;
+                this.ctx.fillStyle = colors.primary;
+                
+                for (let x = 0; x < this.canvas.width; x += 30) {
+                    for (let y = 0; y < this.canvas.height; y += 30) {
+                        this.ctx.save();
+                        this.ctx.translate(x + 15, y + 15);
+                        this.ctx.rotate(Math.PI / 4);
+                        this.ctx.fillRect(-6, -6, 12, 12);
+                        this.ctx.restore();
+                    }
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawBorder() {
+                const colors = this.template.colors;
+                
+                // Bordure principale
+                this.ctx.strokeStyle = colors.primary;
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeRect(2, 2, this.canvas.width - 4, this.canvas.height - 4);
+                
+                // Bordure intérieure
+                this.ctx.strokeStyle = colors.accent;
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(6, 6, this.canvas.width - 12, this.canvas.height - 12);
+            }
+            
+            drawHeader() {
+                const colors = this.template.colors;
+                
+                // Fond de l'en-tête
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, 60);
+                gradient.addColorStop(0, colors.primary);
+                gradient.addColorStop(1, this.darkenColor(colors.primary, 20));
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, 60);
+                
+                // Logo SCP (texte)
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 24px Arial';
+                this.ctx.fillText('SCP', 15, 35);
+                
+                // Texte FOUNDATION
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.fillText('FOUNDATION', 70, 25);
+                
+                // Devise
+                this.ctx.font = '10px Arial';
+                this.ctx.fillText('SECURE • CONTAIN • PROTECT', 70, 45);
+                
+                // Site designation
+                if (this.formData.siteDesignation) {
+                    this.ctx.textAlign = 'right';
+                    this.ctx.font = 'bold 16px Arial';
+                    this.ctx.fillText(this.formData.siteDesignation, this.canvas.width - 15, 35);
+                    this.ctx.textAlign = 'left';
+                }
+            }
+            
+            drawPersonnelInfo() {
+                const colors = this.template.colors;
+                let y = 85;
+                
+                // Nom complet
+                if (this.formData.fullName) {
+                    this.ctx.fillStyle = colors.text;
+                    this.ctx.font = 'bold 22px Arial';
+                    this.ctx.fillText(this.formData.fullName.toUpperCase(), 15, y);
+                    y += 30;
+                    
+                    // Ligne de séparation
+                    this.ctx.fillStyle = colors.primary;
+                    this.ctx.fillRect(15, y - 5, 250, 2);
+                    y += 10;
+                }
+                
+                // ID employé
+                if (this.formData.employeeId) {
+                    this.ctx.fillStyle = colors.text;
+                    this.ctx.font = 'bold 16px Arial';
+                    this.ctx.fillText(`ID: ${this.formData.employeeId}`, 15, y);
+                    y += 25;
+                }
+                
+                // Département
+                if (this.formData.department) {
+                    this.ctx.font = '14px Arial';
+                    this.ctx.fillText(`DEPT: ${this.formData.department.toUpperCase()}`, 15, y);
+                    y += 20;
+                }
+                
+                // Position
+                if (this.formData.position) {
+                    this.ctx.fillText(`POS: ${this.formData.position.toUpperCase()}`, 15, y);
+                    y += 20;
+                }
+            }
+            
+            drawClearanceBadge() {
+                if (!this.formData.clearanceLevel) return;
+                
+                const x = 15;
+                const y = 180;
+                const width = 180;
+                const height = 28;
+                const colors = this.template.colors;
+                
+                // Fond du badge
+                const gradient = this.ctx.createLinearGradient(x, y, x, y + height);
+                gradient.addColorStop(0, colors.primary);
+                gradient.addColorStop(1, this.darkenColor(colors.primary, 30));
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(x, y, width, height);
+                
+                // Bordure
+                this.ctx.strokeStyle = colors.accent;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(x, y, width, height);
+                
+                // Texte
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                
+                const levelText = this.formData.clearanceLevel === '0' ? 'D-CLASS' : `CLEARANCE LEVEL ${this.formData.clearanceLevel}`;
+                this.ctx.fillText(levelText, x + width/2, y + 18);
+                this.ctx.textAlign = 'left';
+                
+                // Indicateurs de niveau
+                const level = parseInt(this.formData.clearanceLevel);
+                for (let i = 0; i < Math.min(level, 5); i++) {
+                    this.ctx.fillStyle = colors.accent;
+                    this.ctx.fillRect(x + width - 30 + (i * 5), y + 6, 3, 16);
+                }
+            }
+            
+            drawClassificationBand() {
+                const colors = this.template.colors;
+                const bandY = this.canvas.height - 40;
+                const bandHeight = 40;
+                
+                // Fond de la bande
+                this.ctx.fillStyle = colors.primary;
+                this.ctx.fillRect(0, bandY, this.canvas.width, bandHeight);
+                
+                // Texte de classification
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 16px Arial';
+                this.ctx.textAlign = 'center';
+                
+                const classification = this.getClassificationText();
+                this.ctx.fillText(classification, this.canvas.width / 2, bandY + 25);
+                this.ctx.textAlign = 'left';
+                
+                // Indicateurs de sécurité
+                for (let i = 0; i < 3; i++) {
+                    this.ctx.fillStyle = colors.accent;
+                    this.ctx.fillRect(10 + (i * 8), bandY + 10, 4, 20);
+                    this.ctx.fillRect(this.canvas.width - 34 + (i * 8), bandY + 10, 4, 20);
+                }
+            }
+            
+            drawPhotoPlaceholder() {
+                const photoX = this.canvas.width - 130;
+                const photoY = 75;
+                const photoWidth = 110;
+                const photoHeight = 140;
+                const colors = this.template.colors;
+                
+                // Bordure de la photo
+                this.ctx.fillStyle = colors.primary;
+                this.ctx.fillRect(photoX - 3, photoY - 3, photoWidth + 6, photoHeight + 6);
+                
+                // Fond de la photo
+                this.ctx.fillStyle = '#f8f8f8';
+                this.ctx.fillRect(photoX, photoY, photoWidth, photoHeight);
+                
+                // Bordure intérieure
+                this.ctx.strokeStyle = '#dddddd';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(photoX, photoY, photoWidth, photoHeight);
+                
+                // Icône placeholder
+                this.ctx.fillStyle = '#cccccc';
+                this.ctx.font = '50px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('👤', photoX + photoWidth/2, photoY + photoHeight/2 + 15);
+                
+                // Texte
+                this.ctx.fillStyle = '#999999';
+                this.ctx.font = 'bold 10px Arial';
+                this.ctx.fillText('PHOTO', photoX + photoWidth/2, photoY + photoHeight - 20);
+                this.ctx.fillText('REQUIRED', photoX + photoWidth/2, photoY + photoHeight - 8);
+                this.ctx.textAlign = 'left';
+            }
+            
+            drawSecurityElements() {
+                // Code-barres simple
+                const barcodeX = 15;
+                const barcodeY = this.canvas.height - 70;
+                
+                this.ctx.fillStyle = '#000000';
+                
+                // Générer un code-barres basé sur l'ID
+                const employeeId = this.formData.employeeId || 'SCP-0000-000';
+                const barcodeData = employeeId.replace(/[^0-9]/g, '');
+                
+                for (let i = 0; i < 25; i++) {
+                    const barWidth = Math.random() > 0.5 ? 2 : 1;
+                    const barHeight = 15 + Math.random() * 8;
+                    this.ctx.fillRect(barcodeX + (i * 3), barcodeY - barHeight, barWidth, barHeight);
+                }
+                
+                // Texte du code-barres
+                this.ctx.fillStyle = '#666666';
+                this.ctx.font = '8px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(employeeId, barcodeX + 37, barcodeY + 15);
+                this.ctx.textAlign = 'left';
+                
+                // Numéro de série
+                const serial = this.generateSerialNumber();
+                this.ctx.fillStyle = '#999999';
+                this.ctx.font = '8px Arial';
+                this.ctx.textAlign = 'right';
+                this.ctx.fillText(`S/N: ${serial}`, this.canvas.width - 15, this.canvas.height - 50);
+                this.ctx.textAlign = 'left';
+            }
+            
+            getClassificationText() {
+                switch (this.cardType) {
+                    case 'researcher':
+                        return 'RESEARCH PERSONNEL';
+                    case 'security':
+                        return 'SECURITY PERSONNEL';
+                    case 'dclass':
+                        return 'D-CLASS SUBJECT';
+                    case 'o5':
+                        return 'O5 COUNCIL MEMBER';
+                    case 'mtf':
+                        return 'MTF OPERATIVE';
+                    default:
+                        return 'FOUNDATION PERSONNEL';
+                }
+            }
+            
+            generateSerialNumber() {
+                const employeeId = this.formData.employeeId || 'SCP-0000-000';
+                const hash = this.hashString(employeeId + this.cardType);
+                return Math.abs(hash).toString().substring(0, 8).toUpperCase();
+            }
+            
+            hashString(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash;
+            }
+            
+            darkenColor(color, percent) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                    (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+            }
+            
+            exportCard() {
+                if (!this.canvas) {
+                    debugLog('Impossible d\'exporter - pas de canvas', 'ERROR');
+                    return;
+                }
+                
+                const link = document.createElement('a');
+                link.download = `scp-card-${this.cardType}-${this.formData.employeeId || 'unknown'}.png`;
+                link.href = this.canvas.toDataURL('image/png');
+                link.click();
+                
+                debugLog('Carte exportée avec succès', 'SUCCESS');
+            }
+            
+            exportHighResolution() {
+                if (!this.canvas) {
+                    debugLog('Impossible d\'exporter en haute résolution - pas de canvas', 'ERROR');
+                    return;
+                }
+                
+                // Créer un canvas haute résolution
+                const highResCanvas = document.createElement('canvas');
+                const highResCtx = highResCanvas.getContext('2d');
+                
+                const scaleFactor = 2;
+                highResCanvas.width = this.canvas.width * scaleFactor;
+                highResCanvas.height = this.canvas.height * scaleFactor;
+                
+                highResCtx.scale(scaleFactor, scaleFactor);
+                
+                // Sauvegarder le contexte original
+                const originalCtx = this.ctx;
+                const originalCanvas = this.canvas;
+                
+                // Utiliser le contexte haute résolution
+                this.ctx = highResCtx;
+                this.canvas = highResCanvas;
+                
+                // Rendre la carte en haute résolution
+                this.renderCard();
+                
+                // Restaurer le contexte original
+                this.ctx = originalCtx;
+                this.canvas = originalCanvas;
+                
+                // Exporter
+                const link = document.createElement('a');
+                link.download = `scp-card-${this.cardType}-${this.formData.employeeId || 'unknown'}-hires.png`;
+                link.href = highResCanvas.toDataURL('image/png');
+                link.click();
+                
+                debugLog('Carte haute résolution exportée avec succès', 'SUCCESS');
+            }
+            
+            getPreviewCompletionStatus() {
+                const cardInterface = new UnifiedCardInterface();
+                const config = cardInterface.cardTypes[this.cardType];
+                if (!config) return { percentage: 0, completed: 0, total: 0 };
+                
+                const requiredFields = config.requiredFields;
+                let completed = 0;
+                
+                requiredFields.forEach(field => {
+                    const value = this.formData[field];
+                    if (value && (typeof value === 'string' ? value.trim() !== '' : true)) {
+                        completed++;
+                    }
+                });
+                
+                return {
+                    percentage: Math.round((completed / requiredFields.length) * 100),
+                    completed: completed,
+                    total: requiredFields.length
+                };
+            }
+        }
+        
+        // Variables globales
+        let cardGenerator = null;
+        let currentCardType = 'researcher';
+        
+        // Fonctions de l'interface - Déclarées globalement
+        window.updateSystemStatus = function(message, progress) {
+            document.getElementById('systemStatus').innerHTML = message;
+            const progressBar = document.getElementById('systemProgress');
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+        };
+        
+        window.initializeGenerator = function() {
+            try {
+                cardGenerator = new SCPCardGenerator(currentCardType, 'client');
+                debugLog('Générateur initialisé avec succès', 'SUCCESS');
+                window.updateSystemStatus('✅ Générateur initialisé et prêt', 100);
+                return true;
+            } catch (error) {
+                debugLog(`Erreur d'initialisation: ${error.message}`, 'ERROR');
+                window.updateSystemStatus('❌ Erreur d\'initialisation', 0);
+                return false;
+            }
+        };
+        
+        window.updateCard = function() {
+            if (!cardGenerator) {
+                if (!window.initializeGenerator()) {
+                    return;
+                }
+            }
+            
+            // Récupérer les données du formulaire
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                employeeId: document.getElementById('employeeId').value,
+                siteDesignation: document.getElementById('siteDesignation').value,
+                department: document.getElementById('department').value,
+                clearanceLevel: document.getElementById('clearanceLevel').value,
+                position: document.getElementById('position').value
+            };
+            
+            // Mettre à jour le type de carte si nécessaire
+            if (cardGenerator.cardType !== currentCardType) {
+                cardGenerator.cardType = currentCardType;
+                cardGenerator.template = new CardTemplate(currentCardType);
+                debugLog(`Type de carte changé vers: ${currentCardType}`);
+            }
+            
+            // Mettre à jour les données et rendre
+            cardGenerator.updateFormData(formData);
+            cardGenerator.renderCard();
+            
+            // Mettre à jour le statut
+            const status = cardGenerator.getPreviewCompletionStatus();
+            document.getElementById('cardStatus').innerHTML = `
+                <span class="status-indicator status-success"></span>
+                Carte mise à jour - ${status.completed}/${status.total} champs (${status.percentage}%)
+            `;
+            
+            document.getElementById('previewStatus').textContent = 
+                `Carte générée - ${status.percentage}% complète`;
+        };
+        
+        window.exportCard = function() {
+            if (cardGenerator) {
+                cardGenerator.exportCard();
+            } else {
+                debugLog('Aucune carte à exporter', 'WARNING');
+            }
+        };
+        
+        window.exportHighRes = function() {
+            if (cardGenerator) {
+                cardGenerator.exportHighResolution();
+            } else {
+                debugLog('Aucune carte à exporter en haute résolution', 'WARNING');
+            }
+        };
+        
+        window.clearLogs = function() {
+            document.getElementById('debugConsole').innerHTML = 
+                '[SYSTEM] Console effacée<br>';
+        };
+        
+        // Fonctions de test - Déclarées globalement
+        window.runAllTests = function() {
+            debugLog('=== DÉBUT DES TESTS COMPLETS ===', 'INFO');
+            window.runModuleTest();
+            setTimeout(() => window.runGeneratorTest(), 500);
+            setTimeout(() => window.runExportTest(), 1000);
+        };
+        
+        window.runModuleTest = function() {
+            debugLog('Test des modules...', 'INFO');
+            
+            const modules = [
+                { name: 'CardTemplate', testClass: CardTemplate },
+                { name: 'UnifiedCardInterface', testClass: UnifiedCardInterface },
+                { name: 'SCPCardGenerator', testClass: SCPCardGenerator }
+            ];
+            
+            let allPassed = true;
+            
+            modules.forEach(module => {
+                try {
+                    const instance = new module.testClass('researcher');
+                    debugLog(`✅ ${module.name}: OK`, 'SUCCESS');
+                } catch (error) {
+                    debugLog(`❌ ${module.name}: ERREUR - ${error.message}`, 'ERROR');
+                    allPassed = false;
+                }
+            });
+            
+            debugLog(`Test des modules: ${allPassed ? 'RÉUSSI' : 'ÉCHOUÉ'}`, allPassed ? 'SUCCESS' : 'ERROR');
+        };
+        
+        window.runGeneratorTest = function() {
+            debugLog('Test du générateur...', 'INFO');
+            
+            try {
+                const testGenerator = new SCPCardGenerator('researcher', 'client');
+                
+                const testData = {
+                    fullName: 'Dr. Test Subject',
+                    employeeId: 'SCP-TEST-001',
+                    siteDesignation: 'Site-19',
+                    department: 'Testing',
+                    clearanceLevel: '3',
+                    position: 'Test Researcher'
+                };
+                
+                testGenerator.updateFormData(testData);
+                
+                // Test du canvas temporaire
+                const testCanvas = document.createElement('canvas');
+                testCanvas.width = 428;
+                testCanvas.height = 270;
+                testGenerator.canvas = testCanvas;
+                testGenerator.ctx = testCanvas.getContext('2d');
+                
+                testGenerator.renderCard();
+                
+                const status = testGenerator.getPreviewCompletionStatus();
+                
+                debugLog(`✅ Générateur testé: ${status.percentage}% complète`, 'SUCCESS');
+                debugLog('Test du générateur: RÉUSSI', 'SUCCESS');
+                
+            } catch (error) {
+                debugLog(`❌ Test du générateur: ÉCHOUÉ - ${error.message}`, 'ERROR');
+            }
+        };
+        
+        window.runExportTest = function() {
+            debugLog('Test d\'export...', 'INFO');
+            
+            if (cardGenerator) {
+                try {
+                    // Test de génération de données d'export
+                    const dataUrl = cardGenerator.canvas.toDataURL('image/png');
+                    if (dataUrl && dataUrl.startsWith('data:image/png')) {
+                        debugLog('✅ Export PNG: OK', 'SUCCESS');
+                        debugLog('Test d\'export: RÉUSSI', 'SUCCESS');
+                    } else {
+                        debugLog('❌ Export PNG: Données invalides', 'ERROR');
+                    }
+                } catch (error) {
+                    debugLog(`❌ Test d\'export: ÉCHOUÉ - ${error.message}`, 'ERROR');
+                }
+            } else {
+                debugLog('❌ Aucun générateur disponible pour le test d\'export', 'ERROR');
+            }
+        };
+        
+        // Vérifier que toutes les classes sont disponibles
+        function checkClassesAvailable() {
+            const requiredClasses = ['CardTemplate', 'UnifiedCardInterface', 'SCPCardGenerator'];
+            const missing = [];
+            
+            requiredClasses.forEach(className => {
+                if (!window[className]) {
+                    missing.push(className);
+                }
+            });
+            
+            if (missing.length > 0) {
+                debugLog(`Classes manquantes: ${missing.join(', ')}`, 'ERROR');
+                return false;
+            }
+            
+            debugLog('Toutes les classes sont disponibles', 'SUCCESS');
+            return true;
+        }
+
+        // Initialisation de la page
+        window.addEventListener('load', () => {
+            debugLog('Page chargée, initialisation...', 'INFO');
+            window.updateSystemStatus('🔄 Initialisation en cours...', 25);
+            
+            // Vérifier que les classes sont disponibles
+            if (!checkClassesAvailable()) {
+                debugLog('Attente du chargement des classes...', 'WARNING');
+                window.updateSystemStatus('⏳ Chargement des classes...', 30);
+                
+                // Réessayer après un délai
+                setTimeout(() => {
+                    if (checkClassesAvailable()) {
+                        debugLog('Classes maintenant disponibles', 'SUCCESS');
+                        initializeApplication();
+                    } else {
+                        debugLog('Échec du chargement des classes', 'ERROR');
+                        window.updateSystemStatus('❌ Erreur de chargement des classes', 0);
+                    }
+                }, 500);
+            } else {
+                initializeApplication();
+            }
+        });
+        
+        function initializeApplication() {
+            debugLog('Initialisation de l\'application...', 'INFO');
+            window.updateSystemStatus('🔄 Configuration de l\'interface...', 50);
+            
+            // Initialiser les événements des types de cartes
+            document.querySelectorAll('.card-type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Retirer la classe active de tous les boutons
+                    document.querySelectorAll('.card-type-btn').forEach(b => b.classList.remove('active'));
+                    // Ajouter la classe active au bouton cliqué
+                    btn.classList.add('active');
+                    
+                    currentCardType = btn.dataset.type;
+                    debugLog(`Type de carte sélectionné: ${currentCardType}`);
+                    
+                    // Mettre à jour la carte si le générateur existe
+                    if (cardGenerator) {
+                        window.updateCard();
+                    }
+                });
+            });
+            
+            // Initialiser les événements des champs de formulaire
+            const formFields = ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'];
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', window.updateCard);
+                    field.addEventListener('change', window.updateCard);
+                }
+            });
+            
+            window.updateSystemStatus('🔄 Initialisation du générateur...', 75);
+            
+            // Initialiser le générateur
+            setTimeout(() => {
+                try {
+                    if (window.initializeGenerator()) {
+                        window.updateSystemStatus('✅ Système prêt', 100);
+                        window.updateCard(); // Générer la carte initiale
+                        debugLog('=== SYSTÈME PRÊT ===', 'SUCCESS');
+                        
+                        // Lancer les tests automatiquement
+                        setTimeout(() => {
+                            debugLog('Lancement des tests automatiques...', 'INFO');
+                            window.runAllTests();
+                        }, 1000);
+                    } else {
+                        window.updateSystemStatus('❌ Erreur d\'initialisation du générateur', 0);
+                    }
+                } catch (error) {
+                    debugLog(`Erreur critique: ${error.message}`, 'ERROR');
+                    window.updateSystemStatus('❌ Erreur critique', 0);
+                }
+            }, 500);
+        }
+        
+        // Rendre les classes disponibles globalement
+        window.SCPCardGenerator = SCPCardGenerator;
+        window.CardTemplate = CardTemplate;
+        window.UnifiedCardInterface = UnifiedCardInterface;
+        
+        debugLog('Classes du générateur de cartes chargées', 'SUCCESS');
+    </script>
+</body>
+</html>

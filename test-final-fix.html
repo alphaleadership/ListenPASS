@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        #console { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 20px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Final Fix Test</h1>
+    <p>Testing if SCPCardGenerator is now available after fixing optional chaining operators.</p>
+    
+    <div id="results"></div>
+    <div id="console"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const consoleDiv = document.getElementById('console');
+        
+        function addResult(type, title, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function log(message) {
+            console.log(message);
+            consoleDiv.innerHTML += message + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            log(args.join(' '));
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            log('❌ ' + args.join(' '));
+        };
+        
+        // Set up error handling
+        window.addEventListener('error', function(e) {
+            log('❌ JavaScript Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+            addResult('error', 'Script Error', e.message);
+        });
+        
+        log('🚀 Starting final fix test...');
+        log('Browser: ' + navigator.userAgent);
+        
+        // Test browser compatibility
+        log('Testing browser features:');
+        log('- Arrow functions: ' + ((() => true)() ? 'supported' : 'not supported'));
+        log('- Classes: ' + (typeof class {} === 'function' ? 'supported' : 'not supported'));
+        log('- const/let: ' + (() => { try { eval('const x = 1'); return 'supported'; } catch(e) { return 'not supported'; } })());
+        
+        // Check before loading
+        log('Before loading: window.SCPCardGenerator = ' + typeof window.SCPCardGenerator);
+    </script>
+
+    <!-- Load dependencies first -->
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/data-models.js"></script>
+    
+    <!-- Load card generator -->
+    <script src="./js/client/card-generator.js"></script>
+
+    <script>
+        log('After loading all scripts:');
+        log('- ValidationError: ' + typeof window.ValidationError);
+        log('- PersonnelValidator: ' + typeof window.PersonnelValidator);
+        log('- SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+        log('- CardTemplate: ' + typeof window.CardTemplate);
+        log('- UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+        
+        if (window.SCPCardGenerator) {
+            addResult('success', 'Module Loading', '🎉 SCPCardGenerator is now available!');
+            
+            try {
+                const generator = new SCPCardGenerator('researcher', 'client');
+                addResult('success', 'Instantiation', 'SCPCardGenerator instantiated successfully');
+                log('✅ SCPCardGenerator created: ' + generator.cardType + ' mode: ' + generator.mode);
+                
+                // Test methods
+                const methods = ['updatePreview', 'renderPreview', 'validateForm', 'exportCard'];
+                let allMethodsAvailable = true;
+                
+                methods.forEach(method => {
+                    if (typeof generator[method] === 'function') {
+                        log('✅ Method ' + method + ' is available');
+                    } else {
+                        log('❌ Method ' + method + ' is missing');
+                        allMethodsAvailable = false;
+                    }
+                });
+                
+                if (allMethodsAvailable) {
+                    addResult('success', 'Methods', 'All required methods are available');
+                } else {
+                    addResult('error', 'Methods', 'Some methods are missing');
+                }
+                
+                // Test validation method
+                try {
+                    const testData = { fullName: 'Test User', employeeId: 'SCP-1234-567' };
+                    const validation = generator.validateForm(testData);
+                    log('✅ validateForm works: isValid = ' + validation.isValid);
+                    addResult('success', 'Validation', 'Form validation method works');
+                } catch (err) {
+                    log('❌ validateForm failed: ' + err.message);
+                    addResult('warning', 'Validation', 'Form validation failed: ' + err.message);
+                }
+                
+            } catch (error) {
+                addResult('error', 'Instantiation', 'Failed to instantiate: ' + error.message);
+                log('❌ Instantiation failed: ' + error.message);
+                console.error('Full error:', error);
+            }
+            
+        } else {
+            addResult('error', 'Module Loading', 'SCPCardGenerator is still not available');
+            log('❌ SCPCardGenerator is still not available');
+            
+            // Debug info
+            const allKeys = Object.keys(window);
+            const scpKeys = allKeys.filter(k => k.includes('SCP') || k.includes('Card') || k.includes('Template'));
+            log('Keys containing SCP/Card/Template: ' + scpKeys.join(', '));
+            
+            if (scpKeys.length === 0) {
+                log('No SCP-related keys found in window object');
+            }
+        }
+        
+        log('🏁 Final fix test completed!');
+    </script>
+</body>
+</html>

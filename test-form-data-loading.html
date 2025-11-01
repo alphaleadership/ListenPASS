@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Form Data Loading</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-field { margin: 10px 0; }
+        .form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-field input, .form-field select { width: 200px; padding: 5px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Form Data Loading</h1>
+    
+    <div class="test-section">
+        <h2>Test Form</h2>
+        <form id="personnelForm">
+            <div class="form-field">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" name="fullName" value="Dr. John Smith">
+            </div>
+            <div class="form-field">
+                <label for="employeeId">Employee ID</label>
+                <input type="text" id="employeeId" name="employeeId" value="SCP-1234-567">
+            </div>
+            <div class="form-field">
+                <label for="siteDesignation">Site</label>
+                <select id="siteDesignation" name="siteDesignation">
+                    <option value="">Select Site</option>
+                    <option value="Site-19" selected>Site-19</option>
+                    <option value="Site-██">Site-██</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="department">Department</label>
+                <select id="department" name="department">
+                    <option value="">Select Department</option>
+                    <option value="Research" selected>Research</option>
+                    <option value="Security">Security</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="clearanceLevel">Clearance Level</label>
+                <select id="clearanceLevel" name="clearanceLevel">
+                    <option value="">Select Level</option>
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                    <option value="3" selected>Level 3</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="position">Position</label>
+                <input type="text" id="position" name="position" value="Senior Researcher">
+            </div>
+            <div class="form-field">
+                <label for="issueDate">Issue Date</label>
+                <input type="date" id="issueDate" name="issueDate" value="2024-01-01">
+            </div>
+            <div class="form-field">
+                <label for="expirationDate">Expiration Date</label>
+                <input type="date" id="expirationDate" name="expirationDate" value="2025-01-01">
+            </div>
+        </form>
+        
+        <button onclick="testFormDataCollection()">Test Form Data Collection</button>
+        <button onclick="testCardGeneratorUpdate()">Test Card Generator Update</button>
+    </div>
+    
+    <div id="status"></div>
+    <div id="console" class="log"></div>
+
+    <!-- Load dependencies -->
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/card-generator.js"></script>
+    <script src="./js/client/ui-controller.js"></script>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const consoleDiv = document.getElementById('console');
+        
+        function addStatus(type, message) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusDiv.appendChild(div);
+        }
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            consoleDiv.innerHTML += logMessage + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ⚠️ ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        let uiController = null;
+        let cardGenerator = null;
+        
+        // Initialize components
+        window.addEventListener('load', function() {
+            log('🚀 Initializing test components...');
+            
+            try {
+                if (window.UIController) {
+                    uiController = new UIController();
+                    log('✅ UI Controller created');
+                } else {
+                    log('❌ UIController not available');
+                }
+                
+                if (window.SCPCardGenerator) {
+                    cardGenerator = new SCPCardGenerator('researcher');
+                    log('✅ Card Generator created');
+                } else {
+                    log('❌ SCPCardGenerator not available');
+                }
+                
+                addStatus('success', 'Components initialized');
+                
+            } catch (error) {
+                log('❌ Initialization failed: ' + error.message);
+                addStatus('error', 'Initialization failed: ' + error.message);
+            }
+        });
+        
+        function testFormDataCollection() {
+            log('🧪 Testing form data collection...');
+            
+            // Test UI Controller method
+            if (uiController) {
+                try {
+                    const uiData = uiController.getFormData();
+                    log('📋 UI Controller data: ' + JSON.stringify(uiData, null, 2));
+                    addStatus('success', 'UI Controller form data collected');
+                } catch (error) {
+                    log('❌ UI Controller data collection failed: ' + error.message);
+                    addStatus('error', 'UI Controller failed');
+                }
+            }
+            
+            // Test Card Generator method
+            if (cardGenerator) {
+                try {
+                    cardGenerator.collectAllFormData();
+                    log('📋 Card Generator data: ' + JSON.stringify(cardGenerator.formData, null, 2));
+                    addStatus('success', 'Card Generator form data collected');
+                } catch (error) {
+                    log('❌ Card Generator data collection failed: ' + error.message);
+                    addStatus('error', 'Card Generator failed');
+                }
+            }
+        }
+        
+        function testCardGeneratorUpdate() {
+            log('🔄 Testing card generator update...');
+            
+            if (!cardGenerator) {
+                addStatus('error', 'Card Generator not available');
+                return;
+            }
+            
+            // Get form data
+            const testData = {
+                fullName: document.getElementById('fullName').value,
+                employeeId: document.getElementById('employeeId').value,
+                siteDesignation: document.getElementById('siteDesignation').value,
+                department: document.getElementById('department').value,
+                clearanceLevel: document.getElementById('clearanceLevel').value,
+                position: document.getElementById('position').value,
+                issueDate: document.getElementById('issueDate').value,
+                expirationDate: document.getElementById('expirationDate').value
+            };
+            
+            log('📤 Sending test data: ' + JSON.stringify(testData, null, 2));
+            
+            try {
+                cardGenerator.updatePreview(testData);
+                addStatus('success', 'Card Generator update successful');
+            } catch (error) {
+                log('❌ Card Generator update failed: ' + error.message);
+                addStatus('error', 'Card Generator update failed');
+            }
+        }
+        
+        // Test real-time updates
+        document.getElementById('fullName').addEventListener('input', function(e) {
+            log('📝 Full name changed to: ' + e.target.value);
+        });
+        
+        document.getElementById('employeeId').addEventListener('input', function(e) {
+            log('🆔 Employee ID changed to: ' + e.target.value);
+        });
+    </script>
+</body>
+</html>

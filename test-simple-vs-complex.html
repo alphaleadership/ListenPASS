@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple vs Complex Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; height: 150px; overflow-y: auto; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Simple vs Complex Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Simple Version</h2>
+        <div id="simple-log" class="log"></div>
+        <div id="simple-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Complex Version</h2>
+        <div id="complex-log" class="log"></div>
+        <div id="complex-result"></div>
+    </div>
+
+    <script>
+        const simpleLog = document.getElementById('simple-log');
+        const complexLog = document.getElementById('complex-log');
+        const simpleResult = document.getElementById('simple-result');
+        const complexResult = document.getElementById('complex-result');
+        
+        function logToDiv(div, message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : '';
+            div.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            div.scrollTop = div.scrollHeight;
+        }
+        
+        // Capture console output for simple test
+        let currentLogDiv = simpleLog;
+        
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToDiv(currentLogDiv, args.join(' '));
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToDiv(currentLogDiv, args.join(' '), true);
+        };
+        
+        // Test 1: Load simple version
+        logToDiv(simpleLog, '🚀 Loading simple version...');
+        
+        const simpleScript = document.createElement('script');
+        simpleScript.src = './js/client/card-generator-simple.js';
+        
+        simpleScript.onload = function() {
+            logToDiv(simpleLog, '✅ Simple script loaded');
+            
+            if (window.SimpleSCPCardGenerator) {
+                simpleResult.innerHTML = '<span class="success">✅ SUCCESS: SimpleSCPCardGenerator is available</span>';
+                
+                try {
+                    const gen = new SimpleSCPCardGenerator('researcher');
+                    logToDiv(simpleLog, '✅ Simple generator instantiated successfully');
+                } catch (err) {
+                    logToDiv(simpleLog, '❌ Simple generator instantiation failed: ' + err.message, true);
+                }
+            } else {
+                simpleResult.innerHTML = '<span class="error">❌ FAILED: SimpleSCPCardGenerator not available</span>';
+            }
+            
+            // Now test complex version
+            setTimeout(testComplexVersion, 1000);
+        };
+        
+        simpleScript.onerror = function() {
+            logToDiv(simpleLog, '❌ Failed to load simple script', true);
+            simpleResult.innerHTML = '<span class="error">❌ FAILED: Script loading error</span>';
+            setTimeout(testComplexVersion, 1000);
+        };
+        
+        document.head.appendChild(simpleScript);
+        
+        function testComplexVersion() {
+            currentLogDiv = complexLog;
+            logToDiv(complexLog, '🚀 Loading complex version...');
+            
+            // Load dependencies first
+            const validationScript = document.createElement('script');
+            validationScript.src = './js/client/validation.js';
+            
+            validationScript.onload = function() {
+                logToDiv(complexLog, '✅ Validation script loaded');
+                
+                // Load data models
+                const dataScript = document.createElement('script');
+                dataScript.src = './js/client/data-models.js';
+                
+                dataScript.onload = function() {
+                    logToDiv(complexLog, '✅ Data models script loaded');
+                    
+                    // Load complex card generator
+                    const complexScript = document.createElement('script');
+                    complexScript.src = './js/client/card-generator.js';
+                    
+                    complexScript.onload = function() {
+                        logToDiv(complexLog, '✅ Complex script loaded');
+                        
+                        // Check availability
+                        setTimeout(() => {
+                            logToDiv(complexLog, 'Checking window object...');
+                            logToDiv(complexLog, '- SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+                            logToDiv(complexLog, '- SCP_CARD_GENERATOR_LOADED: ' + window.SCP_CARD_GENERATOR_LOADED);
+                            
+                            if (window.SCPCardGenerator) {
+                                complexResult.innerHTML = '<span class="success">✅ SUCCESS: SCPCardGenerator is available</span>';
+                                
+                                try {
+                                    const gen = new SCPCardGenerator('researcher');
+                                    logToDiv(complexLog, '✅ Complex generator instantiated successfully');
+                                } catch (err) {
+                                    logToDiv(complexLog, '❌ Complex generator instantiation failed: ' + err.message, true);
+                                }
+                            } else {
+                                complexResult.innerHTML = '<span class="error">❌ FAILED: SCPCardGenerator not available</span>';
+                                
+                                // Show debug info
+                                const scpKeys = Object.keys(window).filter(k => k.includes('SCP'));
+                                logToDiv(complexLog, 'SCP keys in window: ' + scpKeys.join(', '));
+                            }
+                        }, 500);
+                    };
+                    
+                    complexScript.onerror = function() {
+                        logToDiv(complexLog, '❌ Failed to load complex script', true);
+                        complexResult.innerHTML = '<span class="error">❌ FAILED: Complex script loading error</span>';
+                    };
+                    
+                    document.head.appendChild(complexScript);
+                };
+                
+                dataScript.onerror = function() {
+                    logToDiv(complexLog, '❌ Failed to load data models script', true);
+                };
+                
+                document.head.appendChild(dataScript);
+            };
+            
+            validationScript.onerror = function() {
+                logToDiv(complexLog, '❌ Failed to load validation script', true);
+            };
+            
+            document.head.appendChild(validationScript);
+        }
+        
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            logToDiv(currentLogDiv, '❌ Global error: ' + e.message + ' at ' + e.filename + ':' + e.lineno, true);
+        });
+    </script>
+</body>
+</html>

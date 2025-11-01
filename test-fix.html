@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP Card Generator - Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { padding: 8px 16px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SCP Card Generator - Fix Test</h1>
+    <p>Testing the SCPCardGenerator initialization fix.</p>
+    
+    <div id="status"></div>
+    
+    <div>
+        <button class="btn-primary" onclick="testInitialization()">Test Initialization</button>
+        <button class="btn-primary" onclick="testModuleAvailability()">Test Module Availability</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <!-- Load modules in order -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/error-handler.js"></script>
+    <script src="./js/client/performance-optimizer.js"></script>
+    <script src="./js/client/api-client.js"></script>
+    <script src="./js/client/site-manager.js"></script>
+    <script src="./js/client/card-generator.js"></script>
+    <script src="./js/client/batch-processor.js"></script>
+    <script src="./js/client/ui-controller.js"></script>
+    <script src="./js/client/app.js"></script>
+
+    <script>
+        function addResult(type, title, message, details = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = `
+                <strong>${title}</strong><br>
+                ${message}
+                ${details ? `<pre>${JSON.stringify(details, null, 2)}</pre>` : ''}
+                <small>Time: ${new Date().toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testModuleAvailability() {
+            const modules = [
+                'PersonnelCard',
+                'ValidationError', 
+                'PersonnelValidator',
+                'ErrorHandler',
+                'PerformanceOptimizer',
+                'APIClient',
+                'ClientSiteManager',
+                'SCPCardGenerator',
+                'ClientBatchProcessor',
+                'UIController',
+                'SCPCardApp'
+            ];
+            
+            const available = {};
+            const missing = [];
+            
+            modules.forEach(moduleName => {
+                if (window[moduleName]) {
+                    available[moduleName] = 'Available';
+                } else {
+                    available[moduleName] = 'Missing';
+                    missing.push(moduleName);
+                }
+            });
+            
+            if (missing.length === 0) {
+                addResult('success', 'Module Availability', 'All modules are available', available);
+            } else {
+                addResult('warning', 'Module Availability', `${missing.length} modules missing: ${missing.join(', ')}`, available);
+            }
+        }
+
+        async function testInitialization() {
+            addResult('info', 'Initialization Test', 'Starting initialization test...');
+            
+            try {
+                // Test SCPCardGenerator creation
+                if (window.SCPCardGenerator) {
+                    const generator = new SCPCardGenerator('researcher', 'client');
+                    addResult('success', 'SCPCardGenerator', 'Successfully created card generator', {
+                        cardType: generator.cardType,
+                        mode: generator.mode,
+                        hasTemplate: !!generator.template
+                    });
+                } else {
+                    addResult('error', 'SCPCardGenerator', 'SCPCardGenerator class not available');
+                }
+                
+                // Test UIController creation
+                if (window.UIController) {
+                    // Don't actually create UIController as it modifies the DOM
+                    addResult('success', 'UIController', 'UIController class is available');
+                } else {
+                    addResult('error', 'UIController', 'UIController class not available');
+                }
+                
+                // Test SCPCardApp creation
+                if (window.SCPCardApp) {
+                    addResult('success', 'SCPCardApp', 'SCPCardApp class is available');
+                } else {
+                    addResult('error', 'SCPCardApp', 'SCPCardApp class not available');
+                }
+                
+            } catch (error) {
+                addResult('error', 'Initialization Test', `Failed: ${error.message}`, {
+                    stack: error.stack
+                });
+            }
+        }
+
+        // Auto-run tests on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('status').innerHTML = `
+                <div class="status info">
+                    <strong>Fix Test Page Loaded</strong><br>
+                    Testing SCPCardGenerator initialization fix.<br>
+                    <small>Current URL: ${window.location.href}</small>
+                </div>
+            `;
+            
+            // Wait a bit for modules to load, then test
+            setTimeout(() => {
+                testModuleAvailability();
+                testInitialization();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

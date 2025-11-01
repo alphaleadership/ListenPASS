@@ -25,3 +25,347 @@
     --input-scheme: dark;
   }
 }
+/* Bat
+ch Processing Styles */
+.batch-interface {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.batch-preview {
+    background: var(--clr-bg);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.batch-preview h4 {
+    color: var(--clr-text);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--clr-bg-alt);
+    border-radius: var(--border-radius);
+}
+
+.stat.valid {
+    background: rgba(18, 202, 134, 0.1);
+    border: 1px solid var(--clr-green);
+}
+
+.stat.invalid {
+    background: rgba(219, 0, 0, 0.1);
+    border: 1px solid var(--clr-red);
+}
+
+.stat .label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--clr-text-alt);
+    margin-bottom: 0.5rem;
+}
+
+.stat .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--clr-text);
+}
+
+.errors {
+    background: rgba(219, 0, 0, 0.05);
+    border: 1px solid var(--clr-red);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.errors h5 {
+    color: var(--clr-red);
+    margin-bottom: 0.5rem;
+}
+
+.errors ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.errors li {
+    color: var(--clr-text);
+    margin-bottom: 0.25rem;
+}
+
+.site-distribution {
+    margin-bottom: 1rem;
+}
+
+.site-distribution h5 {
+    color: var(--clr-text);
+    margin-bottom: 0.5rem;
+}
+
+.site-distribution ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.site-distribution li {
+    color: var(--clr-text);
+    margin-bottom: 0.25rem;
+}
+
+.preview-table {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.preview-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--clr-bg);
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--clr-border);
+}
+
+.preview-table th {
+    background: var(--clr-bg-alt);
+    font-weight: bold;
+    color: var(--clr-text);
+}
+
+.preview-table td {
+    color: var(--clr-text);
+}
+
+.generation-options {
+    background: var(--clr-bg);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.generation-options h4 {
+    color: var(--clr-text);
+    margin-bottom: 1rem;
+}
+
+.options-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.option-group label {
+    color: var(--clr-text);
+    font-weight: 500;
+}
+
+.option-group select,
+.option-group input[type="checkbox"] {
+    padding: 0.5rem;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--border-radius);
+    background: var(--clr-bg);
+    color: var(--clr-text);
+}
+
+.actions {
+    margin-top: 1.5rem;
+}
+
+.btn-primary {
+    background: var(--clr-blue);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--clr-blue-alt);
+}
+
+.btn-secondary {
+    background: var(--clr-bg-alt);
+    color: var(--clr-text);
+    border: 1px solid var(--clr-border);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--clr-border);
+}
+
+.download-section {
+    background: rgba(18, 202, 134, 0.1);
+    border: 1px solid var(--clr-green);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.download-section h4 {
+    color: var(--clr-green);
+    margin-bottom: 0.5rem;
+}
+
+.download-section p {
+    color: var(--clr-text);
+    margin-bottom: 1rem;
+}
+
+.download-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.download-btn {
+    background: var(--clr-green);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.download-btn:hover {
+    background: #0ea76b;
+}
+
+/* Progress Bar Styles */
+.batch-progress {
+    background: var(--clr-bg);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: var(--clr-bg-alt);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--clr-blue), var(--clr-blue-alt));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--clr-text);
+    font-size: 0.9rem;
+}
+
+/* File Upload Area */
+.file-upload-area {
+    border: 2px dashed var(--clr-border);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    background: var(--clr-bg);
+    transition: border-color 0.3s, background-color 0.3s;
+    cursor: pointer;
+}
+
+.file-upload-area:hover,
+.file-upload-area.drag-over {
+    border-color: var(--clr-blue);
+    background: rgba(0, 102, 255, 0.05);
+}
+
+.upload-instructions {
+    color: var(--clr-text-alt);
+}
+
+.upload-instructions p {
+    margin-bottom: 0.5rem;
+}
+
+.upload-instructions a {
+    color: var(--clr-blue);
+    text-decoration: none;
+}
+
+.upload-instructions a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .batch-interface {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .download-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .preview-table {
+        font-size: 0.9rem;
+    }
+    
+    .preview-table th,
+    .preview-table td {
+        padding: 0.5rem;
+    }
+}

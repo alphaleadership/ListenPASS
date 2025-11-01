@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Card Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .result { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 8px 16px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Card Generator</h1>
+    <p>Testing SCPCardGenerator class loading and initialization.</p>
+    
+    <button onclick="testCardGenerator()">Test Card Generator</button>
+    <button onclick="testWithCanvas()">Test With Canvas</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <!-- Add a canvas for testing -->
+    <canvas id="cardPreview" width="856" height="540" style="border: 1px solid #ccc; max-width: 100%;"></canvas>
+    
+    <div id="results"></div>
+
+    <!-- Load dependencies -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/card-generator.js"></script>
+
+    <script>
+        function addResult(type, message, details = null) {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `
+                <strong>${new Date().toLocaleTimeString()}</strong> - ${message}
+                ${details ? `<pre>${JSON.stringify(details, null, 2)}</pre>` : ''}
+            `;
+            document.getElementById('results').appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function testCardGenerator() {
+            addResult('info', 'Testing SCPCardGenerator class...');
+            
+            // Check if class exists
+            if (typeof SCPCardGenerator === 'undefined') {
+                addResult('error', 'SCPCardGenerator class is not defined');
+                return;
+            }
+            
+            addResult('success', 'SCPCardGenerator class is defined');
+            
+            // Check if it's in window object
+            if (window.SCPCardGenerator) {
+                addResult('success', 'SCPCardGenerator is available in window object');
+            } else {
+                addResult('warning', 'SCPCardGenerator not in window object');
+            }
+            
+            // Try to create instance without DOM
+            try {
+                const generator = new SCPCardGenerator('researcher', 'client');
+                addResult('success', 'SCPCardGenerator instance created successfully', {
+                    cardType: generator.cardType,
+                    mode: generator.mode,
+                    hasTemplate: !!generator.template,
+                    hasCanvas: !!generator.canvas,
+                    hasContext: !!generator.ctx
+                });
+                
+                // Test methods
+                if (typeof generator.loadTemplate === 'function') {
+                    addResult('success', 'loadTemplate method exists');
+                }
+                
+                if (typeof generator.updatePreview === 'function') {
+                    addResult('success', 'updatePreview method exists');
+                }
+                
+                if (typeof generator.generateCard === 'function') {
+                    addResult('success', 'generateCard method exists');
+                }
+                
+            } catch (error) {
+                addResult('error', `Failed to create SCPCardGenerator: ${error.message}`, {
+                    stack: error.stack
+                });
+            }
+        }
+
+        function testWithCanvas() {
+            addResult('info', 'Testing SCPCardGenerator with canvas...');
+            
+            try {
+                const generator = new SCPCardGenerator('researcher', 'client');
+                
+                if (generator.canvas) {
+                    addResult('success', 'Canvas found and initialized', {
+                        canvasWidth: generator.canvas.width,
+                        canvasHeight: generator.canvas.height,
+                        hasContext: !!generator.ctx
+                    });
+                    
+                    // Test rendering
+                    if (generator.ctx) {
+                        generator.ctx.fillStyle = '#ff0000';
+                        generator.ctx.fillRect(10, 10, 50, 50);
+                        addResult('success', 'Canvas rendering test successful');
+                    }
+                } else {
+                    addResult('warning', 'Canvas not found, but class created successfully');
+                }
+                
+            } catch (error) {
+                addResult('error', `Canvas test failed: ${error.message}`, error);
+            }
+        }
+
+        // Listen for script errors
+        window.addEventListener('error', (event) => {
+            addResult('error', `Script Error: ${event.message}`, {
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        // Auto-run test
+        document.addEventListener('DOMContentLoaded', () => {
+            addResult('info', 'Page loaded, DOM ready');
+            setTimeout(() => {
+                testCardGenerator();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

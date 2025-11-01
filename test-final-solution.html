@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Final Solution</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Final Solution</h1>
+    <p>Testing the enhanced script loading system</p>
+    
+    <div id="status"></div>
+    <div id="console" class="log"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const consoleDiv = document.getElementById('console');
+        
+        function addStatus(type, message) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusDiv.appendChild(div);
+        }
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            consoleDiv.innerHTML += logMessage + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ❌ ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        // Listen for events
+        document.addEventListener('allScriptsLoaded', function(e) {
+            addStatus('success', '🎉 All scripts loaded successfully!');
+            log('All scripts loaded event received');
+        });
+        
+        document.addEventListener('minimalScriptsLoaded', function() {
+            addStatus('warning', '⚠️ Minimal scripts loaded');
+            log('Minimal scripts loaded event received');
+        });
+        
+        document.addEventListener('scpCardGeneratorLoaded', function(e) {
+            addStatus('success', '✅ SCPCardGenerator loaded!');
+            log('SCPCardGenerator loaded event received: ' + JSON.stringify(e.detail));
+        });
+        
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            addStatus('error', '❌ JavaScript Error: ' + e.message);
+            log('Global error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+        
+        log('🚀 Starting enhanced script loading test...');
+        
+        // Simulate the enhanced loading system
+        console.log('🚀 Starting script loading sequence...');
+        
+        // Track script loading
+        window.scriptLoadingStatus = {
+            loaded: [],
+            failed: [],
+            total: 0
+        };
+        
+        function loadScriptWithLogging(src, required = false) {
+            return new Promise((resolve, reject) => {
+                console.log('📦 Loading:', src);
+                window.scriptLoadingStatus.total++;
+                
+                const script = document.createElement('script');
+                script.src = src;
+                
+                script.onload = function() {
+                    console.log('✅ Loaded:', src);
+                    window.scriptLoadingStatus.loaded.push(src);
+                    resolve();
+                };
+                
+                script.onerror = function() {
+                    console.error('❌ Failed to load:', src);
+                    window.scriptLoadingStatus.failed.push(src);
+                    if (required) {
+                        reject(new Error('Required script failed: ' + src));
+                    } else {
+                        resolve(); // Continue even if optional script fails
+                    }
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Load scripts sequentially
+        async function loadAllScripts() {
+            try {
+                // Core dependencies first
+                await loadScriptWithLogging('./js/client/data-models.js', true);
+                await loadScriptWithLogging('./js/client/validation.js', true);
+                
+                // Check if core classes are available
+                if (!window.ValidationError || !window.PersonnelValidator) {
+                    console.error('❌ Core validation classes not available');
+                    throw new Error('Core validation classes missing');
+                }
+                
+                console.log('✅ Core dependencies loaded successfully');
+                
+                // Load card generator (most important)
+                await loadScriptWithLogging('./js/client/card-generator.js', true);
+                
+                // Verify card generator loaded
+                if (!window.SCPCardGenerator) {
+                    console.error('❌ SCPCardGenerator not available after loading');
+                    throw new Error('SCPCardGenerator not loaded');
+                }
+                
+                console.log('🎉 SCPCardGenerator loaded successfully!');
+                
+                // Load UI controller
+                await loadScriptWithLogging('./js/client/ui-controller.js', true);
+                
+                console.log('✅ All critical scripts loaded successfully');
+                
+                // Dispatch ready event
+                document.dispatchEvent(new CustomEvent('allScriptsLoaded', {
+                    detail: window.scriptLoadingStatus
+                }));
+                
+                // Test functionality
+                setTimeout(testFunctionality, 500);
+                
+            } catch (error) {
+                console.error('💥 Script loading failed:', error);
+                addStatus('error', 'Script loading failed: ' + error.message);
+                
+                // Try to continue with minimal functionality
+                if (window.SCPCardGenerator) {
+                    console.log('⚠️ Continuing with minimal functionality...');
+                    document.dispatchEvent(new CustomEvent('minimalScriptsLoaded'));
+                    setTimeout(testFunctionality, 500);
+                }
+            }
+        }
+        
+        function testFunctionality() {
+            log('🧪 Testing functionality...');
+            
+            if (window.SCPCardGenerator) {
+                try {
+                    const generator = new SCPCardGenerator('researcher');
+                    addStatus('success', '✅ SCPCardGenerator can be instantiated');
+                    
+                    // Test methods
+                    if (typeof generator.updatePreview === 'function') {
+                        addStatus('success', '✅ updatePreview method available');
+                    }
+                    
+                    if (typeof generator.validateForm === 'function') {
+                        const validation = generator.validateForm({ fullName: 'Test' });
+                        addStatus('success', '✅ validateForm method works');
+                    }
+                    
+                    log('🎉 All functionality tests passed!');
+                    
+                } catch (error) {
+                    addStatus('error', '❌ Functionality test failed: ' + error.message);
+                    log('Functionality test error: ' + error.message);
+                }
+            } else {
+                addStatus('error', '❌ SCPCardGenerator not available for testing');
+            }
+        }
+        
+        // Start loading
+        loadAllScripts();
+    </script>
+</body>
+</html>

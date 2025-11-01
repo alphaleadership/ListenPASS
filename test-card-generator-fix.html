@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SCP Card Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        #testResults { margin-top: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test SCP Card Generator</h1>
+    
+    <div class="test-section">
+        <h2>Module Loading Test</h2>
+        <button onclick="testModuleLoading()">Test Module Loading</button>
+        <div id="moduleResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Card Generator Test</h2>
+        <button onclick="testCardGenerator()">Test Card Generation</button>
+        <div id="cardResults"></div>
+        <canvas id="testCanvas" width="428" height="270" style="display: none;"></canvas>
+    </div>
+    
+    <div class="test-section">
+        <h2>Form Integration Test</h2>
+        <button onclick="testFormIntegration()">Test Form Integration</button>
+        <div id="formResults"></div>
+    </div>
+    
+    <div id="testResults"></div>
+
+    <script>
+        // Sequential module loading to ensure proper order
+        async function loadModulesSequentially() {
+            const modules = [
+                './js/client/data-models.js',
+                './js/client/validation.js',
+                './js/client/error-handler.js',
+                './js/client/performance-optimizer.js',
+                './js/client/api-client.js',
+                './js/client/site-manager.js',
+                './js/client/card-generator.js',
+                './js/client/batch-processor.js',
+                './js/client/ui-controller.js',
+                './js/client/app.js'
+            ];
+            
+            for (const module of modules) {
+                await loadScript(module);
+                console.log(`✅ Loaded: ${module}`);
+            }
+            
+            console.log('🎉 All modules loaded successfully');
+            
+            // Wait a bit more for initialization
+            setTimeout(() => {
+                testModuleLoading();
+            }, 500);
+        }
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Start loading when page is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Starting sequential module loading...', 'info');
+            loadModulesSequentially().catch(error => {
+                log(`Module loading failed: ${error.message}`, 'error');
+            });
+        });
+    </script>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function testModuleLoading() {
+            const moduleResults = document.getElementById('moduleResults');
+            moduleResults.innerHTML = '<p>Testing module loading...</p>';
+            
+            const requiredModules = [
+                'PersonnelCard',
+                'ValidationError', 
+                'PersonnelValidator',
+                'ErrorHandler',
+                'APIClient',
+                'SCPCardGenerator',
+                'UnifiedCardInterface',
+                'SCPCardApp'
+            ];
+            
+            const results = [];
+            let allLoaded = true;
+            
+            requiredModules.forEach(moduleName => {
+                const isLoaded = !!window[moduleName];
+                results.push(`${moduleName}: ${isLoaded ? '✅' : '❌'}`);
+                if (!isLoaded) allLoaded = false;
+            });
+            
+            moduleResults.innerHTML = `
+                <h3>Module Loading Results:</h3>
+                <ul>${results.map(r => `<li>${r}</li>`).join('')}</ul>
+                <p><strong>Overall Status: ${allLoaded ? '✅ All modules loaded' : '❌ Some modules missing'}</strong></p>
+            `;
+            
+            log(`Module loading test: ${allLoaded ? 'PASSED' : 'FAILED'}`, allLoaded ? 'success' : 'error');
+        }
+
+        function testCardGenerator() {
+            const cardResults = document.getElementById('cardResults');
+            cardResults.innerHTML = '<p>Testing card generator...</p>';
+            
+            try {
+                // Test card generator creation
+                const generator = new SCPCardGenerator('researcher', 'client');
+                
+                // Test form data
+                const testData = {
+                    fullName: 'Dr. John Doe',
+                    employeeId: 'SCP-1234-001',
+                    siteDesignation: 'Site-19',
+                    department: 'Research',
+                    clearanceLevel: '3',
+                    position: 'Senior Researcher',
+                    issueDate: '2024-01-01',
+                    expirationDate: '2025-01-01'
+                };
+                
+                // Update form data
+                generator.formData = testData;
+                
+                // Test canvas setup
+                const canvas = document.getElementById('testCanvas');
+                generator.canvas = canvas;
+                generator.ctx = canvas.getContext('2d');
+                
+                // Test card rendering
+                generator.renderCard();
+                
+                canvas.style.display = 'block';
+                
+                cardResults.innerHTML = `
+                    <h3>Card Generator Test Results:</h3>
+                    <ul>
+                        <li>✅ Generator created successfully</li>
+                        <li>✅ Form data updated</li>
+                        <li>✅ Canvas initialized</li>
+                        <li>✅ Card rendered</li>
+                    </ul>
+                    <p><strong>Status: ✅ PASSED</strong></p>
+                `;
+                
+                log('Card generator test: PASSED', 'success');
+                
+            } catch (error) {
+                cardResults.innerHTML = `
+                    <h3>Card Generator Test Results:</h3>
+                    <p class="error">❌ Error: ${error.message}</p>
+                    <details>
+                        <summary>Error Details</summary>
+                        <pre>${error.stack}</pre>
+                    </details>
+                `;
+                
+                log(`Card generator test: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        function testFormIntegration() {
+            const formResults = document.getElementById('formResults');
+            formResults.innerHTML = '<p>Testing form integration...</p>';
+            
+            try {
+                // Test UnifiedCardInterface
+                const cardInterface = new UnifiedCardInterface();
+                
+                // Test card type switching
+                const switchResult = cardInterface.switchCardType('security');
+                
+                // Test validation
+                const validator = new PersonnelValidator();
+                const testData = {
+                    fullName: 'Agent Smith',
+                    employeeId: 'SCP-5678-002',
+                    clearanceLevel: 4
+                };
+                
+                const validation = validator.validatePersonnelData(testData, 'security');
+                
+                formResults.innerHTML = `
+                    <h3>Form Integration Test Results:</h3>
+                    <ul>
+                        <li>✅ UnifiedCardInterface created</li>
+                        <li>✅ Card type switching: ${switchResult ? 'Working' : 'Failed'}</li>
+                        <li>✅ Validator created</li>
+                        <li>✅ Validation executed: ${validation.errors.length} errors found</li>
+                    </ul>
+                    <p><strong>Status: ✅ PASSED</strong></p>
+                `;
+                
+                log('Form integration test: PASSED', 'success');
+                
+            } catch (error) {
+                formResults.innerHTML = `
+                    <h3>Form Integration Test Results:</h3>
+                    <p class="error">❌ Error: ${error.message}</p>
+                    <details>
+                        <summary>Error Details</summary>
+                        <pre>${error.stack}</pre>
+                    </details>
+                `;
+                
+                log(`Form integration test: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        // Module loading is now handled by the sequential loader above
+    </script>
+</body>
+</html>

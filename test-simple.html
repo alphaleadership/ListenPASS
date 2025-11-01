@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple - SCP Card Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        canvas { border: 1px solid #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Simple - SCP Card Generator</h1>
+    <div id="status"></div>
+    <canvas id="testCanvas" width="428" height="270"></canvas>
+    
+    <script>
+        function log(message, type = 'info') {
+            const status = document.getElementById('status');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            status.appendChild(div);
+            console.log(message);
+        }
+        
+        // Test basic functionality step by step
+        async function runTests() {
+            log('Starting basic tests...', 'info');
+            
+            // Test 1: Load core data models
+            try {
+                const script1 = document.createElement('script');
+                script1.src = './js/client/data-models.js';
+                document.head.appendChild(script1);
+                
+                await new Promise(resolve => {
+                    script1.onload = resolve;
+                    script1.onerror = () => {
+                        log('Failed to load data-models.js', 'error');
+                        resolve();
+                    };
+                });
+                
+                if (window.PersonnelCard) {
+                    log('✅ PersonnelCard loaded', 'success');
+                    
+                    // Test creating a personnel card
+                    const card = new PersonnelCard({
+                        fullName: 'Dr. Test',
+                        employeeId: 'SCP-1234-001'
+                    });
+                    
+                    log(`✅ Created card for: ${card.getDisplayName()}`, 'success');
+                } else {
+                    log('❌ PersonnelCard not available', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error loading data models: ${error.message}`, 'error');
+            }
+            
+            // Test 2: Load card generator
+            try {
+                const script2 = document.createElement('script');
+                script2.src = './js/client/card-generator.js';
+                document.head.appendChild(script2);
+                
+                await new Promise(resolve => {
+                    script2.onload = resolve;
+                    script2.onerror = () => {
+                        log('Failed to load card-generator.js', 'error');
+                        resolve();
+                    };
+                });
+                
+                // Wait a bit for the script to initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (window.SCPCardGenerator) {
+                    log('✅ SCPCardGenerator loaded', 'success');
+                    
+                    // Test creating a generator
+                    const generator = new SCPCardGenerator('researcher', 'client');
+                    log('✅ Generator created', 'success');
+                    
+                    // Test canvas setup
+                    const canvas = document.getElementById('testCanvas');
+                    generator.canvas = canvas;
+                    generator.ctx = canvas.getContext('2d');
+                    
+                    // Test basic rendering
+                    generator.formData = {
+                        fullName: 'Dr. John Doe',
+                        employeeId: 'SCP-1234-001',
+                        siteDesignation: 'Site-19',
+                        department: 'Research',
+                        clearanceLevel: '3',
+                        position: 'Senior Researcher'
+                    };
+                    
+                    try {
+                        generator.renderCard();
+                        log('✅ Card rendered successfully', 'success');
+                    } catch (renderError) {
+                        log(`❌ Render error: ${renderError.message}`, 'error');
+                    }
+                    
+                } else {
+                    log('❌ SCPCardGenerator not available', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error loading card generator: ${error.message}`, 'error');
+            }
+            
+            // Test 3: Test API connectivity
+            try {
+                const response = await fetch('/api/sites');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API working - ${data.sites.length} sites available`, 'success');
+                } else {
+                    log(`❌ API error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ API connection failed: ${error.message}`, 'error');
+            }
+            
+            log('Tests completed!', 'info');
+        }
+        
+        // Start tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runTests, 100);
+        });
+    </script>
+</body>
+</html>

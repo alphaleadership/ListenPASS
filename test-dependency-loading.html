@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependency Loading Test</title>
+</head>
+<body>
+    <h1>Dependency Loading Test</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            console.log(message);
+            output.innerHTML += message + '<br>';
+        }
+        
+        log('🚀 Starting dependency loading test...');
+        
+        // Track loading progress
+        let scriptsLoaded = 0;
+        const totalScripts = 3;
+        
+        function checkComplete() {
+            scriptsLoaded++;
+            log(`Scripts loaded: ${scriptsLoaded}/${totalScripts}`);
+            
+            if (scriptsLoaded === totalScripts) {
+                log('All scripts loaded, checking availability...');
+                
+                log('ValidationError: ' + typeof window.ValidationError);
+                log('PersonnelValidator: ' + typeof window.PersonnelValidator);
+                log('SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+                log('CardTemplate: ' + typeof window.CardTemplate);
+                log('UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+                
+                if (window.SCPCardGenerator) {
+                    log('🎉 SUCCESS: SCPCardGenerator is available!');
+                    
+                    try {
+                        const gen = new SCPCardGenerator('researcher');
+                        log('✅ SCPCardGenerator instantiated successfully');
+                        
+                        // Test a method that uses dependencies
+                        try {
+                            const testData = { fullName: 'Test', employeeId: 'SCP-1234-567' };
+                            const validation = gen.validateForm(testData);
+                            log('✅ validateForm method works: ' + validation.isValid);
+                        } catch (err) {
+                            log('❌ validateForm method failed: ' + err.message);
+                        }
+                        
+                    } catch (err) {
+                        log('❌ SCPCardGenerator instantiation failed: ' + err.message);
+                    }
+                } else {
+                    log('❌ FAILURE: SCPCardGenerator is not available');
+                }
+            }
+        }
+        
+        // Load scripts in order
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                log('✅ Loaded: ' + src);
+                callback();
+                checkComplete();
+            };
+            script.onerror = function() {
+                log('❌ Failed to load: ' + src);
+                callback();
+                checkComplete();
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Load dependencies first
+        log('Loading validation.js...');
+        loadScript('./js/client/validation.js', () => {
+            log('Validation classes available:');
+            log('- ValidationError: ' + typeof window.ValidationError);
+            log('- PersonnelValidator: ' + typeof window.PersonnelValidator);
+        });
+        
+        // Load data models
+        log('Loading data-models.js...');
+        loadScript('./js/client/data-models.js', () => {
+            log('Data models loaded');
+        });
+        
+        // Load card generator last
+        log('Loading card-generator.js...');
+        loadScript('./js/client/card-generator.js', () => {
+            log('Card generator script loaded');
+        });
+    </script>
+</body>
+</html>

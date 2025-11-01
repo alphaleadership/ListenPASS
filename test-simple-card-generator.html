@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple SCP Card Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        canvas { 
+            border: 1px solid #ccc; 
+            margin: 10px 0; 
+            display: block;
+        }
+        .form-section {
+            display: flex;
+            gap: 20px;
+        }
+        .form-fields {
+            flex: 1;
+        }
+        .preview-section {
+            flex: 1;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Simple SCP Card Generator</h1>
+    
+    <div class="test-section">
+        <h2>Module Status</h2>
+        <div id="moduleStatus">Checking modules...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Interactive Card Generator</h2>
+        <div class="form-section">
+            <div class="form-fields">
+                <h3>Personnel Information</h3>
+                <label>Full Name:</label>
+                <input type="text" id="fullName" placeholder="Dr. John Doe" value="Dr. John Doe">
+                
+                <label>Employee ID:</label>
+                <input type="text" id="employeeId" placeholder="SCP-1234-001" value="SCP-1234-001">
+                
+                <label>Card Type:</label>
+                <select id="cardType">
+                    <option value="researcher">Research Personnel</option>
+                    <option value="security">Security Personnel</option>
+                    <option value="dclass">D-Class Personnel</option>
+                    <option value="o5">O5 Council</option>
+                    <option value="mtf">MTF Personnel</option>
+                </select>
+                
+                <label>Site Designation:</label>
+                <input type="text" id="siteDesignation" placeholder="Site-19" value="Site-19">
+                
+                <label>Department:</label>
+                <input type="text" id="department" placeholder="Research" value="Research">
+                
+                <label>Clearance Level:</label>
+                <select id="clearanceLevel">
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                    <option value="3" selected>Level 3</option>
+                    <option value="4">Level 4</option>
+                    <option value="5">Level 5</option>
+                </select>
+                
+                <label>Position:</label>
+                <input type="text" id="position" placeholder="Senior Researcher" value="Senior Researcher">
+                
+                <button onclick="updateCard()" style="margin-top: 20px;">Update Card Preview</button>
+                <button onclick="exportCard()">Export Card</button>
+            </div>
+            
+            <div class="preview-section">
+                <h3>Card Preview</h3>
+                <canvas id="cardCanvas" width="428" height="270"></canvas>
+                <div id="cardStatus">Ready to generate card</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load required modules -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/error-handler.js"></script>
+
+    <!-- Inline simplified card generator -->
+    <script>
+        // Define classes in correct order to avoid loading issues
+        class CardTemplate {
+            constructor(type) {
+                this.type = type;
+                this.colors = this.getColorScheme(type);
+            }
+            
+            getColorScheme(type) {
+                const schemes = {
+                    researcher: { primary: '#2c5aa0', secondary: '#ffffff', accent: '#ff6b35' },
+                    security: { primary: '#8b0000', secondary: '#ffffff', accent: '#ffd700' },
+                    dclass: { primary: '#ff4500', secondary: '#ffffff', accent: '#ffff00' },
+                    o5: { primary: '#000000', secondary: '#ffffff', accent: '#ff0000' },
+                    mtf: { primary: '#4a4a4a', secondary: '#ffffff', accent: '#00ff00' }
+                };
+                return schemes[type] || schemes.researcher;
+            }
+        }
+        
+        class UnifiedCardInterface {
+            constructor() {
+                this.currentCardType = 'researcher';
+                this.cardTypes = {
+                    researcher: {
+                        title: "Research Personnel",
+                        clearanceLevels: [1, 2, 3, 4],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    },
+                    security: {
+                        title: "Security Personnel",
+                        clearanceLevels: [1, 2, 3, 4, 5],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    },
+                    dclass: {
+                        title: "D-Class Personnel",
+                        clearanceLevels: [0],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation'],
+                        optionalFields: ['photo', 'dateOfBirth']
+                    },
+                    o5: {
+                        title: "O5 Council",
+                        clearanceLevels: [5],
+                        requiredFields: ['fullName', 'employeeId', 'position'],
+                        optionalFields: ['photo']
+                    },
+                    mtf: {
+                        title: "MTF Personnel",
+                        clearanceLevels: [2, 3, 4, 5],
+                        requiredFields: ['fullName', 'employeeId', 'siteDesignation', 'department', 'clearanceLevel', 'position'],
+                        optionalFields: ['photo', 'dateOfBirth', 'emergencyContact']
+                    }
+                };
+            }
+            
+            switchCardType(newType) {
+                if (this.cardTypes[newType]) {
+                    this.currentCardType = newType;
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        class SCPCardGenerator {
+            constructor(cardType, mode = 'client') {
+                this.cardType = cardType;
+                this.mode = mode;
+                this.template = new CardTemplate(cardType);
+                this.formData = {};
+                this.canvas = null;
+                this.ctx = null;
+                
+                // Initialize canvas
+                this.initializeCanvas();
+            }
+            
+            initializeCanvas() {
+                this.canvas = document.getElementById('cardCanvas');
+                if (this.canvas) {
+                    this.ctx = this.canvas.getContext('2d');
+                    console.log('✅ Canvas initialized');
+                } else {
+                    console.warn('❌ Canvas not found');
+                }
+            }
+            
+            updateFormData(data) {
+                this.formData = { ...this.formData, ...data };
+                console.log('📝 Form data updated:', this.formData);
+            }
+            
+            renderCard() {
+                if (!this.ctx) {
+                    console.error('❌ No canvas context available');
+                    return;
+                }
+                
+                console.log('🎨 Rendering card...');
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw background
+                this.ctx.fillStyle = this.template.colors.secondary;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw border
+                this.ctx.strokeStyle = this.template.colors.primary;
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeRect(2, 2, this.canvas.width - 4, this.canvas.height - 4);
+                
+                // Draw header
+                this.ctx.fillStyle = this.template.colors.primary;
+                this.ctx.fillRect(0, 0, this.canvas.width, 50);
+                
+                // Draw SCP Foundation text
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 18px Arial';
+                this.ctx.fillText('SCP FOUNDATION', 15, 30);
+                
+                // Draw site designation
+                if (this.formData.siteDesignation) {
+                    this.ctx.textAlign = 'right';
+                    this.ctx.fillText(this.formData.siteDesignation, this.canvas.width - 15, 30);
+                    this.ctx.textAlign = 'left';
+                }
+                
+                // Draw personnel information
+                this.ctx.fillStyle = '#000000';
+                let y = 80;
+                
+                if (this.formData.fullName) {
+                    this.ctx.font = 'bold 20px Arial';
+                    this.ctx.fillText(this.formData.fullName.toUpperCase(), 15, y);
+                    y += 30;
+                }
+                
+                if (this.formData.employeeId) {
+                    this.ctx.font = 'bold 16px Arial';
+                    this.ctx.fillText(`ID: ${this.formData.employeeId}`, 15, y);
+                    y += 25;
+                }
+                
+                // Draw clearance badge
+                if (this.formData.clearanceLevel) {
+                    this.drawClearanceBadge(15, y, this.formData.clearanceLevel);
+                    y += 35;
+                }
+                
+                if (this.formData.department) {
+                    this.ctx.font = '14px Arial';
+                    this.ctx.fillText(`DEPT: ${this.formData.department.toUpperCase()}`, 15, y);
+                    y += 20;
+                }
+                
+                if (this.formData.position) {
+                    this.ctx.fillText(`POS: ${this.formData.position.toUpperCase()}`, 15, y);
+                    y += 20;
+                }
+                
+                // Draw classification band
+                this.ctx.fillStyle = this.template.colors.primary;
+                this.ctx.fillRect(0, this.canvas.height - 35, this.canvas.width, 35);
+                
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(this.getClassificationText(), this.canvas.width / 2, this.canvas.height - 15);
+                this.ctx.textAlign = 'left';
+                
+                // Draw photo placeholder
+                this.drawPhotoPlaceholder();
+                
+                console.log('✅ Card rendered successfully');
+            }
+            
+            drawClearanceBadge(x, y, level) {
+                const badgeWidth = 150;
+                const badgeHeight = 25;
+                
+                // Badge background
+                this.ctx.fillStyle = this.template.colors.primary;
+                this.ctx.fillRect(x, y, badgeWidth, badgeHeight);
+                
+                // Badge border
+                this.ctx.strokeStyle = this.template.colors.accent;
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(x, y, badgeWidth, badgeHeight);
+                
+                // Badge text
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                
+                const levelText = level === '0' ? 'D-CLASS' : `CLEARANCE LEVEL ${level}`;
+                this.ctx.fillText(levelText, x + badgeWidth/2, y + 16);
+                this.ctx.textAlign = 'left';
+            }
+            
+            drawPhotoPlaceholder() {
+                const photoX = this.canvas.width - 120;
+                const photoY = 70;
+                const photoWidth = 100;
+                const photoHeight = 130;
+                
+                // Photo border
+                this.ctx.fillStyle = this.template.colors.primary;
+                this.ctx.fillRect(photoX - 2, photoY - 2, photoWidth + 4, photoHeight + 4);
+                
+                // Photo background
+                this.ctx.fillStyle = '#f8f8f8';
+                this.ctx.fillRect(photoX, photoY, photoWidth, photoHeight);
+                
+                // Photo placeholder icon
+                this.ctx.fillStyle = '#cccccc';
+                this.ctx.font = '40px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('👤', photoX + photoWidth/2, photoY + photoHeight/2 + 15);
+                
+                // Photo text
+                this.ctx.fillStyle = '#999999';
+                this.ctx.font = 'bold 10px Arial';
+                this.ctx.fillText('PHOTO', photoX + photoWidth/2, photoY + photoHeight - 15);
+                this.ctx.fillText('REQUIRED', photoX + photoWidth/2, photoY + photoHeight - 5);
+                this.ctx.textAlign = 'left';
+            }
+            
+            getClassificationText() {
+                switch (this.cardType) {
+                    case 'researcher':
+                        return 'RESEARCH PERSONNEL';
+                    case 'security':
+                        return 'SECURITY PERSONNEL';
+                    case 'dclass':
+                        return 'D-CLASS SUBJECT';
+                    case 'o5':
+                        return 'O5 COUNCIL MEMBER';
+                    case 'mtf':
+                        return 'MTF OPERATIVE';
+                    default:
+                        return 'FOUNDATION PERSONNEL';
+                }
+            }
+            
+            exportCard() {
+                if (!this.canvas) return;
+                
+                const link = document.createElement('a');
+                link.download = `scp-card-${this.cardType}-${this.formData.employeeId || 'unknown'}.png`;
+                link.href = this.canvas.toDataURL('image/png');
+                link.click();
+                
+                console.log('💾 Card exported');
+            }
+            
+            getPreviewCompletionStatus() {
+                const interface = new UnifiedCardInterface();
+                const config = interface.cardTypes[this.cardType];
+                if (!config) return { percentage: 0, completed: 0, total: 0 };
+                
+                const requiredFields = config.requiredFields;
+                let completed = 0;
+                
+                requiredFields.forEach(field => {
+                    const value = this.formData[field];
+                    if (value && (typeof value === 'string' ? value.trim() !== '' : true)) {
+                        completed++;
+                    }
+                });
+                
+                return {
+                    percentage: Math.round((completed / requiredFields.length) * 100),
+                    completed: completed,
+                    total: requiredFields.length
+                };
+            }
+        }
+        
+        // Make classes globally available
+        window.SCPCardGenerator = SCPCardGenerator;
+        window.CardTemplate = CardTemplate;
+        window.UnifiedCardInterface = UnifiedCardInterface;
+        
+        console.log('✅ SCP Card Generator classes loaded successfully');
+    </script>
+
+    <script>
+        let cardGenerator = null;
+        
+        function checkModules() {
+            const moduleStatus = document.getElementById('moduleStatus');
+            const requiredModules = [
+                'PersonnelCard',
+                'ValidationError', 
+                'PersonnelValidator',
+                'ErrorHandler',
+                'SCPCardGenerator',
+                'UnifiedCardInterface',
+                'CardTemplate'
+            ];
+            
+            const results = [];
+            let allLoaded = true;
+            
+            requiredModules.forEach(moduleName => {
+                const isLoaded = !!window[moduleName];
+                results.push(`${moduleName}: ${isLoaded ? '✅' : '❌'}`);
+                if (!isLoaded) allLoaded = false;
+            });
+            
+            moduleStatus.innerHTML = `
+                <h3>Module Status:</h3>
+                <ul>${results.map(r => `<li>${r}</li>`).join('')}</ul>
+                <p><strong>Overall: ${allLoaded ? '✅ All modules loaded' : '❌ Some modules missing'}</strong></p>
+            `;
+            
+            return allLoaded;
+        }
+        
+        function initializeGenerator() {
+            try {
+                cardGenerator = new SCPCardGenerator('researcher', 'client');
+                console.log('✅ Card generator initialized');
+                
+                // Set initial form data
+                updateCard();
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to initialize card generator:', error);
+                return false;
+            }
+        }
+        
+        function updateCard() {
+            if (!cardGenerator) {
+                if (!initializeGenerator()) {
+                    document.getElementById('cardStatus').textContent = 'Error: Could not initialize card generator';
+                    return;
+                }
+            }
+            
+            // Get form data
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                employeeId: document.getElementById('employeeId').value,
+                cardType: document.getElementById('cardType').value,
+                siteDesignation: document.getElementById('siteDesignation').value,
+                department: document.getElementById('department').value,
+                clearanceLevel: document.getElementById('clearanceLevel').value,
+                position: document.getElementById('position').value
+            };
+            
+            // Update card type if changed
+            const newCardType = formData.cardType;
+            if (cardGenerator.cardType !== newCardType) {
+                cardGenerator.cardType = newCardType;
+                cardGenerator.template = new CardTemplate(newCardType);
+            }
+            
+            // Update form data and render
+            cardGenerator.updateFormData(formData);
+            cardGenerator.renderCard();
+            
+            // Update status
+            const status = cardGenerator.getPreviewCompletionStatus();
+            document.getElementById('cardStatus').textContent = 
+                `Card updated - ${status.completed}/${status.total} fields (${status.percentage}%)`;
+        }
+        
+        function exportCard() {
+            if (cardGenerator) {
+                cardGenerator.exportCard();
+            } else {
+                alert('Please generate a card first');
+            }
+        }
+        
+        // Auto-setup when page loads
+        window.addEventListener('load', () => {
+            console.log('🚀 Page loaded, checking modules...');
+            
+            setTimeout(() => {
+                const modulesOk = checkModules();
+                
+                if (modulesOk) {
+                    console.log('✅ All modules loaded, initializing generator...');
+                    initializeGenerator();
+                } else {
+                    console.warn('⚠️ Some modules missing, but trying to initialize anyway...');
+                    initializeGenerator();
+                }
+            }, 500);
+        });
+        
+        // Add event listeners for real-time updates
+        document.addEventListener('DOMContentLoaded', () => {
+            const formFields = ['fullName', 'employeeId', 'cardType', 'siteDesignation', 'department', 'clearanceLevel', 'position'];
+            
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateCard);
+                    field.addEventListener('change', updateCard);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

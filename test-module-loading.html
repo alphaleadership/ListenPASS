@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        #console { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 20px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Module Loading Test</h1>
+    <p>Testing if SCPCardGenerator loads correctly after fixing syntax errors.</p>
+    
+    <div id="results"></div>
+    <div id="console"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const consoleDiv = document.getElementById('console');
+        
+        function addResult(type, title, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function log(message) {
+            console.log(message);
+            consoleDiv.innerHTML += message + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            log(args.join(' '));
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            log('❌ ' + args.join(' '));
+        };
+        
+        log('🚀 Starting module loading test...');
+        
+        // Test before loading
+        log('Before loading card-generator.js:');
+        log('- window.SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+        log('- window.CardTemplate: ' + typeof window.CardTemplate);
+        log('- window.UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+        
+        if (window.SCPCardGenerator) {
+            addResult('error', 'Pre-load Check', 'SCPCardGenerator already exists (unexpected)');
+        } else {
+            addResult('success', 'Pre-load Check', 'SCPCardGenerator not yet loaded (expected)');
+        }
+    </script>
+
+    <!-- Load the card generator module -->
+    <script src="./js/client/card-generator.js"></script>
+
+    <script>
+        // Test after loading
+        log('After loading card-generator.js:');
+        log('- window.SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+        log('- window.CardTemplate: ' + typeof window.CardTemplate);
+        log('- window.UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+        
+        if (window.SCPCardGenerator) {
+            addResult('success', 'Module Loading', 'SCPCardGenerator is now available in window object');
+            
+            // Test instantiation
+            try {
+                const generator = new SCPCardGenerator('researcher', 'client');
+                addResult('success', 'Instantiation', 'SCPCardGenerator can be instantiated successfully');
+                log('✅ SCPCardGenerator instantiated successfully');
+                
+                // Test methods
+                const requiredMethods = ['updatePreview', 'renderPreview', 'validateForm', 'exportCard'];
+                let methodsOk = true;
+                
+                for (const method of requiredMethods) {
+                    if (typeof generator[method] === 'function') {
+                        log(`✅ Method ${method} is available`);
+                    } else {
+                        log(`❌ Method ${method} is missing`);
+                        methodsOk = false;
+                    }
+                }
+                
+                if (methodsOk) {
+                    addResult('success', 'Methods', 'All required methods are available');
+                } else {
+                    addResult('error', 'Methods', 'Some required methods are missing');
+                }
+                
+            } catch (error) {
+                addResult('error', 'Instantiation', `Failed to instantiate: ${error.message}`);
+                log(`❌ Instantiation failed: ${error.message}`);
+                console.error('Full error:', error);
+            }
+            
+        } else {
+            addResult('error', 'Module Loading', 'SCPCardGenerator is still NOT available after loading');
+        }
+        
+        // Test other classes
+        if (window.CardTemplate) {
+            addResult('success', 'CardTemplate', 'CardTemplate is available');
+            try {
+                const template = new CardTemplate('researcher');
+                log('✅ CardTemplate instantiated successfully');
+            } catch (error) {
+                addResult('error', 'CardTemplate', `Failed to instantiate CardTemplate: ${error.message}`);
+            }
+        } else {
+            addResult('error', 'CardTemplate', 'CardTemplate is not available');
+        }
+        
+        if (window.UnifiedCardInterface) {
+            addResult('success', 'UnifiedCardInterface', 'UnifiedCardInterface is available');
+            try {
+                const interface = new UnifiedCardInterface();
+                log('✅ UnifiedCardInterface instantiated successfully');
+            } catch (error) {
+                addResult('error', 'UnifiedCardInterface', `Failed to instantiate UnifiedCardInterface: ${error.message}`);
+            }
+        } else {
+            addResult('error', 'UnifiedCardInterface', 'UnifiedCardInterface is not available');
+        }
+        
+        log('🏁 Module loading test completed!');
+    </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Definitions Test</title>
+</head>
+<body>
+    <h1>Class Definitions Test</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            console.log(message);
+            output.innerHTML += message + '<br>';
+        }
+        
+        log('Testing class definitions...');
+        
+        // Test 1: Simple CardTemplate class
+        try {
+            class TestCardTemplate {
+                constructor(type) {
+                    this.type = type;
+                }
+            }
+            window.TestCardTemplate = TestCardTemplate;
+            log('✅ TestCardTemplate defined successfully');
+        } catch (error) {
+            log('❌ TestCardTemplate failed: ' + error.message);
+        }
+        
+        // Test 2: Simple UnifiedCardInterface class
+        try {
+            class TestUnifiedCardInterface {
+                constructor() {
+                    this.currentCardType = 'researcher';
+                }
+            }
+            window.TestUnifiedCardInterface = TestUnifiedCardInterface;
+            log('✅ TestUnifiedCardInterface defined successfully');
+        } catch (error) {
+            log('❌ TestUnifiedCardInterface failed: ' + error.message);
+        }
+        
+        // Test 3: Simple SCPCardGenerator class
+        try {
+            class TestSCPCardGenerator {
+                constructor(cardType, mode = 'client') {
+                    this.cardType = cardType;
+                    this.mode = mode;
+                }
+                
+                updatePreview() {
+                    return 'preview updated';
+                }
+            }
+            window.TestSCPCardGenerator = TestSCPCardGenerator;
+            log('✅ TestSCPCardGenerator defined successfully');
+        } catch (error) {
+            log('❌ TestSCPCardGenerator failed: ' + error.message);
+        }
+        
+        // Test 4: Check if they're available in window
+        log('Checking window object:');
+        log('- TestCardTemplate: ' + typeof window.TestCardTemplate);
+        log('- TestUnifiedCardInterface: ' + typeof window.TestUnifiedCardInterface);
+        log('- TestSCPCardGenerator: ' + typeof window.TestSCPCardGenerator);
+        
+        // Test 5: Try instantiation
+        if (window.TestSCPCardGenerator) {
+            try {
+                const gen = new TestSCPCardGenerator('researcher');
+                log('✅ TestSCPCardGenerator instantiated: ' + gen.cardType);
+            } catch (error) {
+                log('❌ TestSCPCardGenerator instantiation failed: ' + error.message);
+            }
+        }
+        
+        log('Now loading the actual card-generator.js file...');
+    </script>
+    
+    <!-- Load the actual file -->
+    <script src="./js/client/card-generator.js"></script>
+    
+    <script>
+        log('After loading card-generator.js:');
+        log('- SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+        log('- CardTemplate: ' + typeof window.CardTemplate);
+        log('- UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+        
+        if (window.SCPCardGenerator) {
+            log('🎉 SUCCESS: Real SCPCardGenerator is available!');
+        } else {
+            log('❌ FAILURE: Real SCPCardGenerator is not available');
+            
+            // Check for any errors
+            log('Checking for potential issues...');
+            log('- All window SCP keys: ' + Object.keys(window).filter(k => k.includes('SCP')));
+        }
+    </script>
+</body>
+</html>

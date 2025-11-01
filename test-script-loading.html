@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Loading Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; font-family: monospace; font-size: 12px; height: 200px; overflow-y: auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Script Loading Diagnostic</h1>
+    
+    <div id="status"></div>
+    <div id="console" class="log"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const consoleDiv = document.getElementById('console');
+        
+        function addStatus(type, message) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusDiv.appendChild(div);
+        }
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            consoleDiv.innerHTML += logMessage + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods to capture all output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ❌ ${args.join(' ')}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        // Track script loading
+        let scriptsToLoad = [
+            './js/client/validation.js',
+            './js/client/data-models.js', 
+            './js/client/card-generator.js'
+        ];
+        
+        let scriptsLoaded = 0;
+        let scriptErrors = 0;
+        
+        function checkComplete() {
+            if (scriptsLoaded + scriptErrors === scriptsToLoad.length) {
+                log(`All scripts processed: ${scriptsLoaded} loaded, ${scriptErrors} failed`);
+                
+                // Check what's available
+                log('Checking window object:');
+                log('- ValidationError: ' + typeof window.ValidationError);
+                log('- PersonnelValidator: ' + typeof window.PersonnelValidator);
+                log('- SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+                log('- CardTemplate: ' + typeof window.CardTemplate);
+                log('- UnifiedCardInterface: ' + typeof window.UnifiedCardInterface);
+                log('- SCP_CARD_GENERATOR_LOADED: ' + window.SCP_CARD_GENERATOR_LOADED);
+                
+                if (window.SCPCardGenerator) {
+                    addStatus('success', '🎉 SCPCardGenerator is available!');
+                    
+                    // Test instantiation
+                    try {
+                        const gen = new SCPCardGenerator('researcher');
+                        addStatus('success', '✅ SCPCardGenerator can be instantiated');
+                        log('Generator created: ' + gen.cardType);
+                    } catch (err) {
+                        addStatus('error', '❌ SCPCardGenerator instantiation failed: ' + err.message);
+                        log('Instantiation error: ' + err.message);
+                    }
+                } else {
+                    addStatus('error', '❌ SCPCardGenerator is not available');
+                    
+                    // Show what SCP-related keys exist
+                    const scpKeys = Object.keys(window).filter(k => k.includes('SCP') || k.includes('Card'));
+                    log('SCP-related keys in window: ' + scpKeys.join(', '));
+                }
+            }
+        }
+        
+        // Load scripts one by one with detailed logging
+        function loadScript(src, index) {
+            log(`Loading script ${index + 1}/${scriptsToLoad.length}: ${src}`);
+            
+            const script = document.createElement('script');
+            script.src = src;
+            
+            script.onload = function() {
+                scriptsLoaded++;
+                log(`✅ Script loaded successfully: ${src}`);
+                checkComplete();
+            };
+            
+            script.onerror = function(e) {
+                scriptErrors++;
+                log(`❌ Script failed to load: ${src}`);
+                log('Error details: ' + JSON.stringify({
+                    message: e.message,
+                    filename: e.filename,
+                    lineno: e.lineno
+                }));
+                checkComplete();
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Set up global error handler
+        window.addEventListener('error', function(e) {
+            log(`❌ Global error: ${e.message} at ${e.filename}:${e.lineno}`);
+            addStatus('error', 'JavaScript error detected: ' + e.message);
+        });
+        
+        // Listen for the card generator loaded event
+        document.addEventListener('scpCardGeneratorLoaded', function(e) {
+            log('🎉 Received scpCardGeneratorLoaded event');
+            log('Event details: ' + JSON.stringify(e.detail));
+            addStatus('success', 'Card generator loaded event received');
+        });
+        
+        log('Starting script loading diagnostic...');
+        log('Browser: ' + navigator.userAgent);
+        log('Document ready state: ' + document.readyState);
+        
+        // Load scripts sequentially
+        scriptsToLoad.forEach((src, index) => {
+            setTimeout(() => loadScript(src, index), index * 100);
+        });
+    </script>
+</body>
+</html>

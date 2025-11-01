@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Export Test</title>
+</head>
+<body>
+    <h1>Simple Export Test</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            console.log(message);
+            output.innerHTML += message + '<br>';
+        }
+        
+        log('Testing simple class export...');
+        
+        // Define a simple class
+        class TestClass {
+            constructor() {
+                this.name = 'TestClass';
+            }
+            
+            getName() {
+                return this.name;
+            }
+        }
+        
+        // Export to window
+        window.TestClass = TestClass;
+        
+        log('TestClass defined and exported');
+        log('typeof window.TestClass: ' + typeof window.TestClass);
+        
+        if (window.TestClass) {
+            try {
+                const instance = new TestClass();
+                log('✅ TestClass instantiated: ' + instance.getName());
+            } catch (error) {
+                log('❌ TestClass instantiation failed: ' + error.message);
+            }
+        }
+        
+        // Now test with a more complex class similar to SCPCardGenerator
+        class ComplexTestClass {
+            constructor(type, mode = 'client') {
+                this.type = type;
+                this.mode = mode;
+                this.data = {};
+            }
+            
+            updateData(newData) {
+                this.data = { ...this.data, ...newData };
+            }
+            
+            validateData() {
+                return { isValid: true, errors: [] };
+            }
+        }
+        
+        window.ComplexTestClass = ComplexTestClass;
+        
+        log('ComplexTestClass defined and exported');
+        log('typeof window.ComplexTestClass: ' + typeof window.ComplexTestClass);
+        
+        if (window.ComplexTestClass) {
+            try {
+                const complex = new ComplexTestClass('test', 'client');
+                complex.updateData({ name: 'Test' });
+                const validation = complex.validateData();
+                log('✅ ComplexTestClass works: ' + validation.isValid);
+            } catch (error) {
+                log('❌ ComplexTestClass failed: ' + error.message);
+            }
+        }
+        
+        log('Simple export test completed. Now loading actual card generator...');
+    </script>
+    
+    <script>
+        // Try to load the actual card generator inline to see what happens
+        log('Loading card generator script...');
+        
+        const script = document.createElement('script');
+        script.src = './js/client/card-generator.js';
+        
+        script.onload = function() {
+            log('✅ Card generator script loaded');
+            log('typeof window.SCPCardGenerator: ' + typeof window.SCPCardGenerator);
+            
+            if (window.SCPCardGenerator) {
+                log('🎉 SUCCESS: SCPCardGenerator is available!');
+            } else {
+                log('❌ FAILURE: SCPCardGenerator is not available after loading');
+                
+                // Check what's in the window object
+                const scpKeys = Object.keys(window).filter(k => k.includes('SCP') || k.includes('Card') || k.includes('Template'));
+                log('Related keys in window: ' + scpKeys.join(', '));
+            }
+        };
+        
+        script.onerror = function(e) {
+            log('❌ Failed to load card generator script');
+            log('Error: ' + e.message);
+        };
+        
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

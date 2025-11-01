@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCP Card Generator Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #console { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 20px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SCP Card Generator Loading Test</h1>
+    <p>This test verifies that the SCPCardGenerator loading issue has been fixed.</p>
+    
+    <div id="results"></div>
+    <div id="console"></div>
+
+    <!-- Load modules in the correct order -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/error-handler.js"></script>
+    <script src="./js/client/performance-optimizer.js"></script>
+    <script src="./js/client/api-client.js"></script>
+    <script src="./js/client/site-manager.js"></script>
+    <script src="./js/client/card-generator.js"></script>
+    <script src="./js/client/batch-processor.js"></script>
+    <script src="./js/client/ui-controller.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        const consoleDiv = document.getElementById('console');
+        
+        function addResult(type, title, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function log(message) {
+           // console.log(message);
+            consoleDiv.innerHTML += message + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console.log to capture output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            log(args.join(' '));
+        };
+        
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            log('⚠️ ' + args.join(' '));
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            log('❌ ' + args.join(' '));
+        };
+        
+        async function runTests() {
+            log('🚀 Starting SCP Card Generator loading tests...');
+            
+            // Test 1: Check if SCPCardGenerator is available
+            if (window.SCPCardGenerator) {
+                addResult('success', 'Module Loading', 'SCPCardGenerator is available in window object');
+                log('✅ SCPCardGenerator found in window object');
+            } else {
+                addResult('error', 'Module Loading', 'SCPCardGenerator is NOT available in window object');
+                log('❌ SCPCardGenerator NOT found in window object');
+                return;
+            }
+            
+            // Test 2: Try to instantiate SCPCardGenerator
+            try {
+                const generator = new SCPCardGenerator('researcher', 'client');
+                addResult('success', 'Instantiation', 'SCPCardGenerator can be instantiated successfully');
+                log('✅ SCPCardGenerator instantiated successfully');
+                
+                // Test 3: Check if it has required methods
+                const requiredMethods = ['updatePreview', 'renderPreview', 'validateForm', 'exportCard'];
+                let methodsOk = true;
+                
+                for (const method of requiredMethods) {
+                    if (typeof generator[method] === 'function') {
+                        log(`✅ Method ${method} is available`);
+                    } else {
+                        log(`❌ Method ${method} is missing`);
+                        methodsOk = false;
+                    }
+                }
+                
+                if (methodsOk) {
+                    addResult('success', 'Methods', 'All required methods are available');
+                } else {
+                    addResult('error', 'Methods', 'Some required methods are missing');
+                }
+                
+                // Test 4: Test UI Controller integration
+                if (window.UIController) {
+                    try {
+                        const uiController = new UIController();
+                        
+                        // Test the new async initialization method
+                        if (typeof uiController.waitForSCPCardGenerator === 'function') {
+                            addResult('success', 'UI Controller', 'waitForSCPCardGenerator method is available');
+                            log('✅ UI Controller has waitForSCPCardGenerator method');
+                            
+                            // Test the async initialization
+                            try {
+                                await uiController.initializeCardGenerator('researcher');
+                                if (uiController.cardGenerator) {
+                                    addResult('success', 'Async Init', 'Card generator initialized successfully via UI Controller');
+                                    log('✅ Card generator initialized via UI Controller');
+                                } else {
+                                    addResult('warning', 'Async Init', 'UI Controller method completed but no card generator set');
+                                    log('⚠️ UI Controller method completed but no card generator set');
+                                }
+                            } catch (error) {
+                                addResult('error', 'Async Init', `Failed to initialize via UI Controller: ${error.message}`);
+                                log(`❌ Failed to initialize via UI Controller: ${error.message}`);
+                            }
+                        } else {
+                            addResult('error', 'UI Controller', 'waitForSCPCardGenerator method is missing');
+                            log('❌ UI Controller missing waitForSCPCardGenerator method');
+                        }
+                    } catch (error) {
+                        addResult('error', 'UI Controller', `Failed to create UI Controller: ${error.message}`);
+                        log(`❌ Failed to create UI Controller: ${error.message}`);
+                    }
+                } else {
+                    addResult('warning', 'UI Controller', 'UIController not available for testing');
+                    log('⚠️ UIController not available');
+                }
+                
+            } catch (error) {
+                addResult('error', 'Instantiation', `Failed to instantiate SCPCardGenerator: ${error.message}`);
+                log(`❌ Failed to instantiate SCPCardGenerator: ${error.message}`);
+            }
+            
+            // Test 5: Check other required classes
+            const requiredClasses = ['CardTemplate', 'UnifiedCardInterface'];
+            for (const className of requiredClasses) {
+                if (window[className]) {
+                    addResult('success', 'Dependencies', `${className} is available`);
+                    log(`✅ ${className} is available`);
+                } else {
+                    addResult('error', 'Dependencies', `${className} is missing`);
+                    log(`❌ ${className} is missing`);
+                }
+            }
+            
+            log('🏁 Tests completed!');
+        }
+        
+        // Wait for all scripts to load, then run tests
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Debug - SCP Card Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .module-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .module {
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .loaded { background: #d4edda; color: #155724; }
+        .missing { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Module Debug - SCP Card Generator</h1>
+    
+    <div class="info">
+        <strong>Debug Information</strong><br>
+        This page helps debug module loading issues by showing which classes are available in the global scope.
+    </div>
+    
+    <button onclick="checkModules()">Check Modules</button>
+    <button onclick="testInitialization()">Test Initialization</button>
+    <button onclick="showGlobalObjects()">Show Global Objects</button>
+    
+    <div id="module-status"></div>
+    <div id="debug-info"></div>
+
+    <!-- Load all modules -->
+    <script src="./js/client/data-models.js"></script>
+    <script src="./js/client/validation.js"></script>
+    <script src="./js/client/error-handler.js"></script>
+    <script src="./js/client/performance-optimizer.js"></script>
+    <script src="./js/client/api-client.js"></script>
+    <script src="./js/client/site-manager.js"></script>
+    <script src="./js/client/card-generator.js"></script>
+    <script src="./js/client/batch-processor.js"></script>
+    <script src="./js/client/ui-controller.js"></script>
+    <script src="./js/client/app.js"></script>
+
+    <script>
+        const expectedModules = [
+            'PersonnelCard',
+            'BatchJob', 
+            'CardTemplate',
+            'AppState',
+            'ValidationError',
+            'PersonnelValidator',
+            'ErrorHandler',
+            'PerformanceOptimizer',
+            'APIClient',
+            'APIError',
+            'ClientSiteManager',
+            'SCPSite',
+            'Department',
+            'SCPCardGenerator',
+            'ClientBatchProcessor',
+            'UIController',
+            'UnifiedCardInterface',
+            'SCPCardApp'
+        ];
+
+        function checkModules() {
+            const statusDiv = document.getElementById('module-status');
+            statusDiv.innerHTML = '<h3>Module Status</h3>';
+            
+            const moduleGrid = document.createElement('div');
+            moduleGrid.className = 'module-status';
+            
+            expectedModules.forEach(moduleName => {
+                const moduleDiv = document.createElement('div');
+                moduleDiv.className = window[moduleName] ? 'module loaded' : 'module missing';
+                moduleDiv.innerHTML = `
+                    <strong>${moduleName}</strong><br>
+                    ${window[moduleName] ? '✅ Loaded' : '❌ Missing'}
+                `;
+                moduleGrid.appendChild(moduleDiv);
+            });
+            
+            statusDiv.appendChild(moduleGrid);
+            
+            // Summary
+            const loaded = expectedModules.filter(name => window[name]).length;
+            const total = expectedModules.length;
+            
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'info';
+            summaryDiv.innerHTML = `
+                <strong>Summary:</strong> ${loaded}/${total} modules loaded (${Math.round(loaded/total*100)}%)
+            `;
+            statusDiv.appendChild(summaryDiv);
+        }
+
+        function testInitialization() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML = '<h3>Initialization Test</h3>';
+            
+            const results = [];
+            
+            // Test each class
+            expectedModules.forEach(moduleName => {
+                try {
+                    if (window[moduleName]) {
+                        // Try to get constructor info
+                        const constructor = window[moduleName];
+                        results.push({
+                            module: moduleName,
+                            status: 'Available',
+                            type: typeof constructor,
+                            isConstructor: constructor.prototype !== undefined
+                        });
+                    } else {
+                        results.push({
+                            module: moduleName,
+                            status: 'Missing',
+                            type: 'undefined',
+                            isConstructor: false
+                        });
+                    }
+                } catch (error) {
+                    results.push({
+                        module: moduleName,
+                        status: 'Error',
+                        error: error.message,
+                        type: 'error',
+                        isConstructor: false
+                    });
+                }
+            });
+            
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(results, null, 2);
+            debugDiv.appendChild(pre);
+        }
+
+        function showGlobalObjects() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML = '<h3>Global Objects (window.*)</h3>';
+            
+            const scpRelated = [];
+            const allGlobals = [];
+            
+            for (const key in window) {
+                if (key.includes('SCP') || key.includes('Card') || key.includes('Personnel') || 
+                    key.includes('Validation') || key.includes('Error') || key.includes('API') ||
+                    key.includes('Site') || key.includes('Batch') || key.includes('UI')) {
+                    scpRelated.push({
+                        name: key,
+                        type: typeof window[key],
+                        value: window[key]?.constructor?.name || 'unknown'
+                    });
+                }
+            }
+            
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(scpRelated, null, 2);
+            debugDiv.appendChild(pre);
+        }
+
+        // Auto-check on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkModules();
+                console.log('🔍 Debug page loaded, modules checked');
+            }, 1000);
+        });
+
+        // Log script loading
+        console.log('🔍 Debug page scripts loading...');
+        
+        // Check for errors
+        window.addEventListener('error', (event) => {
+            console.error('Script error:', event.error);
+            const debugDiv = document.getElementById('debug-info');
+            if (debugDiv) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.background = '#f8d7da';
+                errorDiv.style.color = '#721c24';
+                errorDiv.style.padding = '10px';
+                errorDiv.style.margin = '10px 0';
+                errorDiv.style.borderRadius = '4px';
+                errorDiv.innerHTML = `
+                    <strong>Script Error:</strong><br>
+                    ${event.error?.message || event.message}<br>
+                    <small>File: ${event.filename}:${event.lineno}</small>
+                `;
+                debugDiv.appendChild(errorDiv);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "name": "scp-card-generator",
+  "version": "1.0.0",
+  "description": "SCP Foundation Personnel Card Generator - Hybrid client-server application",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "test": "jest",
+    "build": "npm run build:client",
+    "build:client": "echo 'Client build completed'",
+    "serve": "npm start"
+  },
+  "keywords": [
+    "scp",
+    "foundation",
+    "card",
+    "generator",
+    "id",
+    "personnel"
+  ],
+  "author": "SCP Foundation IT Department",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5",
+    "uuid": "^9.0.1",
+    "csv-parser": "^3.0.0",
+    "xlsx": "^0.18.5",
+    "archiver": "^6.0.1",
+    "canvas": "^2.11.2",
+    "sharp": "^0.32.6",
+    "pdfkit": "^0.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scp-foundation/card-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scp-foundation/card-generator/issues"
+  },
+  "homepage": "https://github.com/scp-foundation/card-generator#readme"
+}
