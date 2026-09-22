@@ -6,65 +6,6 @@ console.log('- Document ready state:', document.readyState);
 /**
  * Template de carte - Configuration visuelle pour chaque type
  */
-class CardTemplate {
-    constructor(type) {
-        this.type = type;
-        this.layout = {
-            width: 856,
-            height: 540,
-            backgroundColor: '#f0f0f0',
-            borderColor: '#333333'
-        };
-        
-        this.colors = this.getColorScheme(type);
-        this.elements = this.getElementPositions();
-    }
-    
-    getColorScheme(type) {
-        const schemes = {
-            researcher: { 
-                primary: '#2c5aa0', 
-                secondary: '#ffffff', 
-                accent: '#ff6b35' 
-            },
-            security: { 
-                primary: '#8b0000', 
-                secondary: '#ffffff', 
-                accent: '#ffd700' 
-            },
-            dclass: { 
-                primary: '#ff4500', 
-                secondary: '#ffffff', 
-                accent: '#ffff00' 
-            },
-            o5: { 
-                primary: '#000000', 
-                secondary: '#ffffff', 
-                accent: '#ff0000' 
-            },
-            mtf: { 
-                primary: '#4a4a4a', 
-                secondary: '#ffffff', 
-                accent: '#00ff00' 
-            }
-        };
-        
-        return schemes[type] || schemes.researcher;
-    }
-    
-    getElementPositions() {
-        return {
-            logo: { position: { x: 20, y: 20 }, size: { w: 80, h: 80 } },
-            photo: { position: { x: 676, y: 100 }, size: { w: 150, h: 200 } },
-            name: { position: { x: 20, y: 100 }, fontSize: 28, fontWeight: 'bold' },
-            employeeId: { position: { x: 20, y: 140 }, fontSize: 20 },
-            clearance: { position: { x: 20, y: 175 }, fontSize: 18 },
-            department: { position: { x: 20, y: 205 }, fontSize: 16 },
-            site: { position: { x: 20, y: 235 }, fontSize: 16 },
-            position: { position: { x: 20, y: 265 }, fontSize: 16 }
-        };
-    }
-}
 
 /**
  * Unified Card Interface - Manages card type configurations and form interface
