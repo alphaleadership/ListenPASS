@@ -1,308 +1,195 @@
 /**
- * Module Loader - Ensures all modules are properly loaded before initialization
+ * Module Loader - Loads client modules on demand and initializes the app once.
+ *
+ * This loader is intentionally self-contained so index.html only needs to load
+ * this file. Already loaded scripts are detected and never injected twice.
  */
 class ModuleLoader {
     constructor() {
-        this.requiredModules = [
-            'PersonnelCard',
-            'ValidationError', 
-            'PersonnelValidator',
-            'ErrorHandler',
-            'PerformanceOptimizer',
-            'APIClient',
-            'ClientSiteManager',
-            'SCPCardGenerator',
-            'ClientBatchProcessor',
-            'UIController',
-            'SCPCardApp'
+        this.basePath = './js/client/';
+        this.modules = [
+            { name: 'data-models.js', required: true },
+            { name: 'validation.js', required: true },
+            { name: 'card-generator.js', required: true },
+            { name: 'error-handler.js' },
+            { name: 'performance-optimizer.js' },
+            { name: 'api-client.js' },
+            { name: 'site-manager.js' },
+            { name: 'batch-processor.js' },
+            { name: 'ui-controller.js', required: true },
+            { name: 'app.js', required: true }
         ];
-        
-        // Core modules that are absolutely required
-        this.coreModules = [
-            'PersonnelCard',
-            'ValidationError',
-            'APIClient',
-            'SCPCardApp'
+        this.optionalModules = [
+            'scp-animations.js',
+            'accessibility-controller.js'
         ];
-        
-        this.loadedModules = new Set();
-        this.checkInterval = null;
-        this.maxWaitTime = 5000; // 5 seconds
-        this.startTime = Date.now();
+        this.promises = new Map();
+        this.appPromise = null;
     }
-    
-    /**
-     * Wait for all required modules to be loaded
-     */
-    async waitForModules() {
-        return new Promise((resolve, reject) => {
-            const checkModules = () => {
-                const currentTime = Date.now();
-                
-                // Check if we've exceeded max wait time
-                if (currentTime - this.startTime > this.maxWaitTime) {
-                    clearInterval(this.checkInterval);
-                    const missing = this.getMissingModules();
-                    
-                    // Check if core modules are at least available
-                    const coreLoaded = this.coreModules.every(moduleName => window[moduleName]);
-                    if (coreLoaded) {
-                        console.log('⚠️ Timeout reached but core modules available, proceeding...');
-                        resolve(this.getModuleStatus());
-                        return;
-                    }
-                    
-                    reject(new Error(`Timeout waiting for modules: ${missing.join(', ')}`));
+
+    scriptUrl(name) {
+        return new URL(this.basePath + name, document.baseURI).href;
+    }
+
+    findScript(name) {
+        const url = this.scriptUrl(name);
+        return Array.from(document.scripts).find(script => script.src === url);
+    }
+
+    loadScript(name, required = false) {
+        if (this.promises.has(name)) {
+            return this.promises.get(name);
+        }
+
+        const existing = this.findScript(name);
+        if (existing && existing.dataset.moduleLoaderState === 'loaded') {
+            return Promise.resolve();
+        }
+
+        const promise = new Promise((resolve, reject) => {
+            const script = existing || document.createElement('script');
+            let settled = false;
+
+            const finish = (error) => {
+                if (settled) return;
+                settled = true;
+                script.removeEventListener('load', onLoad);
+                script.removeEventListener('error', onError);
+
+                if (error) {
+                    script.dataset.moduleLoaderState = 'failed';
+                    console.error(`❌ Failed to load ${name}:`, error);
+                    if (required) reject(error);
+                    else resolve();
                     return;
                 }
-                
-                // Check which modules are loaded
-                this.loadedModules.clear();
-                this.requiredModules.forEach(moduleName => {
-                    if (window[moduleName]) {
-                        this.loadedModules.add(moduleName);
-                    }
-                });
-                
-                const loadedCount = this.loadedModules.size;
-                const totalCount = this.requiredModules.length;
-                
-                console.log(`📦 Modules loaded: ${loadedCount}/${totalCount}`);
-                
-                // Check if core modules are loaded
-                const coreLoaded = this.coreModules.every(moduleName => window[moduleName]);
-                
-                // If all modules are loaded, resolve
-                if (loadedCount === totalCount) {
-                    clearInterval(this.checkInterval);
-                    console.log('✅ All modules loaded successfully');
-                    resolve(this.getModuleStatus());
-                } else if (coreLoaded && currentTime - this.startTime > 1000) {
-                    // If core modules are loaded and we've waited at least 1 second, proceed
-                    clearInterval(this.checkInterval);
-                    console.log(`⚠️ Proceeding with ${loadedCount}/${totalCount} modules loaded (core modules available)`);
-                    resolve(this.getModuleStatus());
-                }
+
+                script.dataset.moduleLoaderState = 'loaded';
+                console.log(`✅ Loaded ${name}`);
+                resolve();
             };
-            
-            // Start checking immediately
-            checkModules();
-            
-            // Continue checking every 100ms
-            this.checkInterval = setInterval(checkModules, 100);
+
+            const onLoad = () => finish();
+            const onError = () => finish(new Error(`Failed to load ${name}`));
+
+            script.addEventListener('load', onLoad, { once: true });
+            script.addEventListener('error', onError, { once: true });
+
+            if (!existing) {
+                script.src = this.basePath + name;
+                script.async = false;
+                script.dataset.moduleLoader = 'true';
+                document.head.appendChild(script);
+            } else if (window[name.replace(/\.js$/, '')]) {
+                // Existing scripts loaded without the marker are already ready.
+                finish();
+            }
         });
+
+        this.promises.set(name, promise);
+        return promise;
     }
-    
-    /**
-     * Get list of missing modules
-     */
-    getMissingModules() {
-        return this.requiredModules.filter(moduleName => !window[moduleName]);
+
+    async loadAll() {
+        for (const module of this.modules) {
+            await this.loadScript(module.name, module.required === true);
+        }
+
+        // Enhancements must not prevent the application from starting.
+        await Promise.all(this.optionalModules.map(name => this.loadScript(name)));
+
+        if (!window.ValidationError || !window.PersonnelValidator) {
+            throw new Error('Validation module did not expose its classes');
+        }
+        if (!window.SCPCardGenerator || !window.CardTemplate) {
+            throw new Error('Card generator module did not expose its classes');
+        }
+        if (!window.UIController || !window.SCPCardApp) {
+            throw new Error('Application UI modules are incomplete');
+        }
+
+        window.SCP_MODULES_LOADED = true;
+        window.SCP_CLASSES_READY = true;
+        window.SCP_MODULES_LOADING = false;
+
+        return this.getStatus();
     }
-    
-    /**
-     * Get current module loading status
-     */
-    getModuleStatus() {
-        const missing = this.getMissingModules();
-        const loaded = Array.from(this.loadedModules);
-        
+
+    getStatus() {
+        const loaded = this.modules
+            .filter(module => this.promises.has(module.name))
+            .map(module => module.name);
         return {
             loaded,
-            missing,
-            loadedCount: loaded.length,
-            totalCount: this.requiredModules.length,
-            isComplete: missing.length === 0,
-            loadTime: Date.now() - this.startTime
+            total: this.modules.length,
+            missing: this.modules
+                .filter(module => !this.promises.has(module.name))
+                .map(module => module.name)
         };
     }
-    
-    /**
-     * Initialize application with proper module loading
-     */
+
     async initializeApp() {
-        try {
-            console.log('🚀 Starting module loading...');
-            
-            // Wait for all modules to load
-            const status = await this.waitForModules();
-            
-            console.log(`✅ All modules loaded in ${status.loadTime}ms`);
-            
-            // Initialize the main application
-            if (window.SCPCardApp) {
-                const app = new SCPCardApp();
-                await app.initialize();
-                return app;
-            } else {
-                throw new Error('SCPCardApp not available after module loading');
+        if (this.appPromise) return this.appPromise;
+
+        this.appPromise = this.loadAll().then(async () => {
+            if (window.scpCardApp?.isInitialized) {
+                return window.scpCardApp;
             }
-            
-        } catch (error) {
+
+            const app = new window.SCPCardApp();
+            await app.initialize();
+            window.scpCardApp = app;
+            window.uiController = app.uiController;
+            window.cardGenerator = app.cardGenerator;
+
+            document.dispatchEvent(new CustomEvent('allScriptsLoaded', {
+                detail: this.getStatus()
+            }));
+            document.dispatchEvent(new CustomEvent('appInitialized', {
+                detail: { app }
+            }));
+
+            return app;
+        }).catch(error => {
             console.error('❌ Module loading failed:', error);
-            
-            // Show user-friendly error message
             this.showLoadingError(error);
-            
             throw error;
-        }
+        });
+
+        return this.appPromise;
     }
-    
-    /**
-     * Show loading error to user
-     */
+
     showLoadingError(error) {
+        if (document.querySelector('.module-loading-error')) return;
+
         const errorDiv = document.createElement('div');
         errorDiv.className = 'module-loading-error';
         errorDiv.innerHTML = `
-            <div style="
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: #f8d7da;
-                color: #721c24;
-                padding: 20px;
-                border-radius: 8px;
-                border: 1px solid #f5c6cb;
-                max-width: 500px;
-                z-index: 10000;
-                font-family: Arial, sans-serif;
-            ">
-                <h3 style="margin-top: 0;">⚠️ Loading Error</h3>
+            <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#f8d7da;color:#721c24;padding:20px;border-radius:8px;border:1px solid #f5c6cb;max-width:500px;z-index:10000;font-family:Arial,sans-serif">
+                <h3 style="margin-top:0">⚠️ Loading Error</h3>
                 <p>The SCP Card Generator failed to load properly.</p>
-                <details>
-                    <summary>Error Details</summary>
-                    <pre style="background: #fff; padding: 10px; border-radius: 4px; overflow-x: auto;">${error.message}</pre>
-                </details>
-                <div style="margin-top: 15px;">
-                    <button onclick="window.location.reload()" style="
-                        background: #dc3545;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    ">Reload Page</button>
-                </div>
-            </div>
-        `;
-        
+                <details><summary>Error details</summary><pre>${String(error.message || error)}</pre></details>
+                <button onclick="window.location.reload()">Reload Page</button>
+            </div>`;
         document.body.appendChild(errorDiv);
-    }
-    
-    /**
-     * Show loading progress
-     */
-    showLoadingProgress() {
-        const progressDiv = document.createElement('div');
-        progressDiv.id = 'module-loading-progress';
-        progressDiv.innerHTML = `
-            <div style="
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 9999;
-                font-family: Arial, sans-serif;
-                text-align: center;
-            ">
-                <h3 style="margin-top: 0;">🔧 Loading SCP Card Generator</h3>
-                <div style="
-                    width: 200px;
-                    height: 4px;
-                    background: #e9ecef;
-                    border-radius: 2px;
-                    overflow: hidden;
-                    margin: 15px 0;
-                ">
-                    <div id="loading-progress-bar" style="
-                        height: 100%;
-                        background: #007bff;
-                        width: 0%;
-                        transition: width 0.3s ease;
-                    "></div>
-                </div>
-                <p id="loading-status">Initializing modules...</p>
-            </div>
-        `;
-        
-        document.body.appendChild(progressDiv);
-        
-        // Update progress periodically
-        const updateProgress = () => {
-            const status = this.getModuleStatus();
-            const percentage = (status.loadedCount / status.totalCount) * 100;
-            
-            const progressBar = document.getElementById('loading-progress-bar');
-            const statusText = document.getElementById('loading-status');
-            
-            if (progressBar) {
-                progressBar.style.width = `${percentage}%`;
-            }
-            
-            if (statusText) {
-                statusText.textContent = `Loading modules... ${status.loadedCount}/${status.totalCount}`;
-            }
-            
-            if (status.isComplete) {
-                setTimeout(() => {
-                    const progressDiv = document.getElementById('module-loading-progress');
-                    if (progressDiv) {
-                        progressDiv.remove();
-                    }
-                }, 500);
-            }
-        };
-        
-        const progressInterval = setInterval(() => {
-            updateProgress();
-            if (this.getModuleStatus().isComplete) {
-                clearInterval(progressInterval);
-            }
-        }, 100);
     }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
-    const moduleLoader = new ModuleLoader();
-    
-    // Show loading progress
-    moduleLoader.showLoadingProgress();
-    
-    try {
-        // Initialize the application with proper module loading
-        const app = await moduleLoader.initializeApp();
-        
-        // Make app globally available
-        window.scpCardApp = app;
-        
-        console.log('🎉 SCP Card Generator initialized successfully');
-        
-        // Add debug commands to console
-        console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║                    SCP FOUNDATION                            ║
-║                  Card Generator Client                       ║
-║                                                              ║
-║  Status: OPERATIONAL                                         ║
-║  Version: 1.0.0                                              ║
-║  Debug: window.scpCardApp.getDebugInfo()                     ║
-║  Diagnostics: await window.scpCardApp.runDiagnostics()      ║
-║                                                              ║
-║  SECURE • CONTAIN • PROTECT                                  ║
-╚══════════════════════════════════════════════════════════════╝
-        `);
-        
-    } catch (error) {
-        console.error('💥 Failed to initialize SCP Card Generator:', error);
+function startSCPModuleLoader() {
+    if (window.scpModuleLoader?.appPromise) {
+        return window.scpModuleLoader.appPromise;
     }
-});
 
-// Make ModuleLoader available globally for debugging
+    window.scpModuleLoader = new ModuleLoader();
+    return window.scpModuleLoader.initializeApp();
+}
+
 window.ModuleLoader = ModuleLoader;
+window.startSCPModuleLoader = startSCPModuleLoader;
+
+// Support both a normal script tag and dynamic loading after DOMContentLoaded.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startSCPModuleLoader, { once: true });
+} else {
+    startSCPModuleLoader();
+}
